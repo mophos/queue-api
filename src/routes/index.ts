@@ -2,7 +2,6 @@
 
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
-import * as http from 'http'
 
 import { UserModel } from '../models/user';
 
@@ -10,8 +9,7 @@ const userModel = new UserModel();
 
 const router = (fastify, { }, next) => {
 
-  var db1: Knex = fastify.db1;
-  var db2: Knex = fastify.db2;
+  var db: Knex = fastify.db;
 
   fastify.get('/hello', async (req: fastify.Request, reply: fastify.Reply) => {
     req.log.info('hello');
@@ -28,7 +26,7 @@ const router = (fastify, { }, next) => {
   }, async (req: fastify.Request, reply: fastify.Reply) => {
     console.log(req.user);
     try {
-      var rs = await userModel.getUser(db1);
+      var rs = await userModel.getUser(db);
       reply.code(200).send({ ok: true, rows: rs });
     } catch (error) {
       req.log.error(error);

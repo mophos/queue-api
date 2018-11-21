@@ -57,7 +57,7 @@ app.decorate("authenticate", async (request, reply) => {
   }
 });
 
-app.register(require('./conn/db'), {
+app.register(require('../conn/db'), {
   connection: {
     client: 'mysql',
     connection: {
