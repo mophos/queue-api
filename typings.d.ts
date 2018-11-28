@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
-import * as Knex from 'knex'
+import { Logger } from 'pino';
+import * as knex from 'knex'
 
 declare module 'fastify' {
   interface FastifyRequest<HttpRequest> {
@@ -10,9 +11,8 @@ declare module 'fastify' {
   interface Request extends FastifyRequest<IncomingMessage> { }
   interface Reply extends FastifyReply<ServerResponse> { }
   interface FastifyInstance {
-    db: Knex;
-    db1: Knex;
-    db2: Knex;
+    db: knex;
+    dbHIS: knex;
   }
 }
 
