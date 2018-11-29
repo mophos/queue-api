@@ -2,24 +2,27 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=queue
 DB_USER=root
-DB_PASSWORD=xxxxxxx
+DB_PASSWORD=##q4u##
 
 DBHIS_HOST=localhost
 DBHIS_PORT=3306
-DBHIS_NAME=hos
+DBHIS_NAME=hi
 DBHIS_USER=root
-DBHIS_PASSWORD=xxxxxxx
+DBHIS_PASSWORD=##q4u##
 
 SECRET_KEY=1234567890
 
 MAX_CONNECTION_PER_MINUTE=10000
 
+################### Queue Service for H4U #####################
+# Enable Q4U
+# 0 = disabled, 1 = enable
+ENABLE_Q4U=0
 # HOSID from Q4U
 Q4U_NOTIFY_TOPIC=0000
-Q4U_NOTIFY_USER=q4uxx
-Q4U_NOTIFY_PASSWORD=q4uxx
-Q4U_NOTIFY_HOST=xx.xx.xx.xx
-Q4U_NOTIFY_PORT=1883
+Q4U_NOTIFY_TOKEN=q4u
+Q4U_NOTIFY_URL=http://203.157.103.14/q4u/notify-hos
+###############################################################
 
 # HIS_TYPE เช่น hi, hosxp
 HIS_TYPE=hi
