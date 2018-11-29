@@ -1,7 +1,6 @@
 /// <reference path="../typings.d.ts" />
 
 import path = require('path');
-import * as http from 'http'
 import * as HttpStatus from 'http-status-codes';
 import * as fastify from 'fastify';
 
@@ -82,7 +81,7 @@ app.register(require('./conn/db'), {
         });
       }
     },
-    debug: true,
+    debug: false,
   },
   connectionName: 'db'
 });
@@ -106,7 +105,7 @@ app.register(require('./conn/db'), {
         });
       }
     },
-    debug: true,
+    debug: false,
   },
   connectionName: 'dbHIS'
 });
@@ -114,6 +113,8 @@ app.register(require('./conn/db'), {
 app.register(require('./routes/index'), { prefix: '/v1', logger: true });
 app.register(require('./routes/login'), { prefix: '/v1/login', logger: true });
 app.register(require('./routes/users'), { prefix: '/v1/users', logger: true });
+app.register(require('./routes/token'), { prefix: '/v1/token', logger: true });
+app.register(require('./routes/api'), { prefix: '/v1/api', logger: true });
 app.register(require('./routes/service_points'), { prefix: '/v1/service-points', logger: true });
 app.register(require('./routes/service_rooms'), { prefix: '/v1/service-rooms', logger: true });
 app.register(require('./routes/priorities'), { prefix: '/v1/priorities', logger: true });

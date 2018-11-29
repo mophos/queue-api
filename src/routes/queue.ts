@@ -1,9 +1,9 @@
 /// <reference path="../../typings.d.ts" />
-
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
 import * as moment from 'moment';
+const axios = require('axios');
 
 import { QueueModel } from '../models/queue';
 import { HiModel } from '../models/his/hi';
@@ -219,7 +219,20 @@ const router = (fastify, { }, next) => {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+
+      const topic = `${process.env.Q4U_NOTIFY_TOPIC}/${servicePointId}`;
+
+      console.log(topic);
+
+      // TODO
+      // Send notify to H4U Server
+      // 
+      // if (process.env.ENABLE_Q4U === '1') {
+      //   await axios.post(process.env.Q4U_NOTIFY_URL, { })
+      // }
+
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
