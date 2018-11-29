@@ -1,4 +1,17 @@
 # ระบบ Queue API
-## ใช้ร่วมกับระบบ Refer
 
-url: https://gitlab.com/moph/refer-moph/refer-api
+## Installation
+
+```
+git clone https://gitlab.com/moph/queue/queue-api
+cd queue-api
+cp config.txt config
+```
+
+Edit `config` file for connection/h4u configuration.
+
+## Running
+
+```
+nodemon
+```

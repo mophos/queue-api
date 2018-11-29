@@ -1,7 +1,6 @@
 /// <reference path="../typings.d.ts" />
 
 import path = require('path');
-import * as http from 'http'
 import * as HttpStatus from 'http-status-codes';
 import * as fastify from 'fastify';
 
@@ -11,7 +10,13 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 
 import helmet = require('fastify-helmet');
 
-const app: fastify.FastifyInstance<Server, IncomingMessage, ServerResponse> = fastify({ logger: { level: 'info' }, bodyLimit: 5 * 1048576 });
+const app: fastify.FastifyInstance<Server, IncomingMessage, ServerResponse> = fastify({
+  logger: {
+    level: 'error',
+    prettyPrint: true
+  },
+  bodyLimit: 5 * 1048576,
+});
 
 app.register(require('fastify-formbody'));
 app.register(require('fastify-cors'), {});
@@ -76,16 +81,44 @@ app.register(require('./conn/db'), {
         });
       }
     },
-    debug: true,
+    debug: false,
   },
   connectionName: 'db'
 });
 
-app.register(require('./routes/index'), { prefix: '/v1', logger: true });
-
-app.get('/', async (req: fastify.FastifyRequest<http.IncomingMessage>, reply: fastify.FastifyReply<http.ServerResponse>) => {
-  reply.code(200).send({ message: 'Fastify, RESTful API services!' })
+app.register(require('./conn/db'), {
+  connection: {
+    client: 'mysql',
+    connection: {
+      host: process.env.DBHIS_HOST,
+      user: process.env.DBHIS_USER,
+      port: +process.env.DBHIS_PORT,
+      password: process.env.DBHIS_PASSWORD,
+      database: process.env.DBHIS_NAME,
+    },
+    pool: {
+      min: 0,
+      max: 7,
+      afterCreate: (conn, done) => {
+        conn.query('SET NAMES utf8', (err) => {
+          done(err, conn);
+        });
+      }
+    },
+    debug: false,
+  },
+  connectionName: 'dbHIS'
 });
+
+app.register(require('./routes/index'), { prefix: '/v1', logger: true });
+app.register(require('./routes/login'), { prefix: '/v1/login', logger: true });
+app.register(require('./routes/users'), { prefix: '/v1/users', logger: true });
+app.register(require('./routes/token'), { prefix: '/v1/token', logger: true });
+app.register(require('./routes/api'), { prefix: '/v1/api', logger: true });
+app.register(require('./routes/service_points'), { prefix: '/v1/service-points', logger: true });
+app.register(require('./routes/service_rooms'), { prefix: '/v1/service-rooms', logger: true });
+app.register(require('./routes/priorities'), { prefix: '/v1/priorities', logger: true });
+app.register(require('./routes/queue'), { prefix: '/v1/queue', logger: true });
 
 const port = +process.env.HTTP_PORT || 3000;
 const host = process.env.HTTP_ADDRESS || '127.0.0.1';

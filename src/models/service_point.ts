@@ -1,0 +1,38 @@
+import * as knex from 'knex';
+
+export class ServicePointModel {
+
+  tableName = 'q4u_service_points';
+
+  list(db: knex) {
+    return db(this.tableName).orderBy('service_point_name');
+  }
+
+  getServicePointIdFromLocalCode(db: knex, localCode: any) {
+    return db(this.tableName).select('service_point_id').where('local_code', localCode).limit(1);
+  }
+
+  getPrefix(db: knex, servicePointId: any) {
+    return db(this.tableName)
+      .select('prefix')
+      .where('service_point_id', servicePointId)
+      .limit(1);
+  }
+
+  getLocalCode(db: knex) {
+    return db(this.tableName).select('local_code');
+  }
+
+  save(db: knex, data: any) {
+    return db(this.tableName).insert(data);
+  }
+
+  update(db: knex, servicePointId: any, data: any) {
+    return db(this.tableName).where('service_point_id', servicePointId).update(data);
+  }
+
+  remove(db: knex, servicePointId: any) {
+    return db(this.tableName).where('service_point_id', servicePointId).del();
+  }
+
+}
