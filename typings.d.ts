@@ -7,12 +7,15 @@ declare module 'fastify' {
   interface FastifyRequest<HttpRequest> {
     user: any;
   }
-  interface FastifyReply<HttpResponse> { }
+  interface FastifyReply<HttpResponse> {
+    view: any;
+  }
   interface Request extends FastifyRequest<IncomingMessage> { }
   interface Reply extends FastifyReply<ServerResponse> { }
   interface FastifyInstance {
     db: knex;
     dbHIS: knex;
+    ws: any;
   }
 }
 
