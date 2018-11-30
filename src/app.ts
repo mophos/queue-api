@@ -4,6 +4,8 @@ import path = require('path');
 import * as HttpStatus from 'http-status-codes';
 import * as fastify from 'fastify';
 
+const serveStatic = require('serve-static');
+
 require('dotenv').config({ path: path.join(__dirname, '../config') });
 
 import { Server, IncomingMessage, ServerResponse } from 'http';
@@ -31,10 +33,7 @@ app.register(require('fastify-rate-limit'), {
   timeWindow: '1 minute'
 });
 
-app.register(require('fastify-static'), {
-  root: path.join(__dirname, '../public'),
-  prefix: '/html',
-});
+app.use(serveStatic(path.join(__dirname, '../public')));
 
 app.register(require('fastify-jwt'), {
   secret: process.env.SECRET_KEY

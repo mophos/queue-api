@@ -18,7 +18,6 @@
     "fastify-jwt": "^0.7.0",
     "fastify-no-icon": "^2.0.0",
     "fastify-rate-limit": "^0.3.0",
-    "fastify-static": "^0.14.0",
     "fastify-ws": "^1.0.0",
     "http-status-codes": "^1.3.0",
     "jsonwebtoken": "^8.4.0",
@@ -28,7 +27,9 @@
     "pino": "^5.8.1",
     "pino-pretty": "^2.2.4",
     "point-of-view": "^2.0.0",
-    "random-js": "^1.0.8"
+    "qrcode": "^1.3.2",
+    "random-js": "^1.0.8",
+    "serve-static": "^1.13.2"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
