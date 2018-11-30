@@ -27,5 +27,7 @@ Q4U_NOTIFY_URL=http://203.157.103.14/q4u/notify-hos
 # HIS_TYPE เช่น hi, hosxp
 HIS_TYPE=hi
 
+QUEUE_DIGIT=3
+
 HTTP_PORT=3000
 HTTP_ADDRESS=127.0.0.1
