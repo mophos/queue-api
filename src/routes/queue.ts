@@ -6,16 +6,41 @@ import * as moment from 'moment';
 const axios = require('axios');
 
 import { QueueModel } from '../models/queue';
+import { EzhospModel } from '../models/his/ezhosp';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
+import { MbaseModel } from '../models/his/mbase';
+import { HomcModel } from '../models/his/homc';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
+const hisType = process.env.HIS_TYPE;
 
-var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+// var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+// ห้ามแก้ไข // 
+var hisModel: any;
+switch (hisType) {
+  case 'ezhosp':
+    hisModel = new EzhospModel();
+    break;
+  case 'hosxp':
+    hisModel = new HosxpModel();
+    break;
+  case 'hi':
+    hisModel = new HiModel();
+    break;
+  case 'homc':
+    hisModel = new HomcModel();
+    break;
+  case 'mbase':
+    hisModel = new MbaseModel();
+    break;
+  default:
+  // hisModel = new HisModel();
+}
 
 const router = (fastify, { }, next) => {
 
