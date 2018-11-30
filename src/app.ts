@@ -4,6 +4,8 @@ import path = require('path');
 import * as HttpStatus from 'http-status-codes';
 import * as fastify from 'fastify';
 
+const serveStatic = require('serve-static');
+
 require('dotenv').config({ path: path.join(__dirname, '../config') });
 
 import { Server, IncomingMessage, ServerResponse } from 'http';
@@ -31,14 +33,19 @@ app.register(require('fastify-rate-limit'), {
   timeWindow: '1 minute'
 });
 
-app.register(require('fastify-static'), {
-  root: path.join(__dirname, '../public'),
-  prefix: '/html',
-});
+app.use(serveStatic(path.join(__dirname, '../public')));
 
 app.register(require('fastify-jwt'), {
   secret: process.env.SECRET_KEY
 });
+
+app.register(require('point-of-view'), {
+  engine: {
+    ejs: require('ejs')
+  }
+});
+
+app.register(require('fastify-ws'), {});
 
 app.decorate("authenticate", async (request, reply) => {
   let token: string = null;
@@ -119,10 +126,29 @@ app.register(require('./routes/service_points'), { prefix: '/v1/service-points',
 app.register(require('./routes/service_rooms'), { prefix: '/v1/service-rooms', logger: true });
 app.register(require('./routes/priorities'), { prefix: '/v1/priorities', logger: true });
 app.register(require('./routes/queue'), { prefix: '/v1/queue', logger: true });
+app.register(require('./routes/print'), { prefix: '/v1/print', logger: true });
+
+app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
+  reply.code(200).send({ message: 'Welcome to Q4U API services!' })
+});
 
 const port = +process.env.HTTP_PORT || 3000;
-const host = process.env.HTTP_ADDRESS || '127.0.0.1';
+const host = process.env.HTTP_ADDRESS || '0.0.0.0';
+
 app.listen(port, host, (err) => {
   if (err) throw err;
+
+  app.ws
+    .on('connection', socket => {
+      console.log('Client connected.')
+      socket.on('message', msg => socket.send(msg))
+      socket.on('close', () => console.log('Client disconnected.'))
+    })
+
+  app.ws.on('error', error => {
+    console.log(error)
+    console.log('WebSocket server error!')
+  });
+
   console.log(app.server.address());
 });

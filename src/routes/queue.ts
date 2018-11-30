@@ -126,9 +126,9 @@ const router = (fastify, { }, next) => {
             qData.dateCreate = dateCreate;
             qData.hisQueue = hisQueue;
 
-            await queueModel.createQueueInfo(db, qData);
+            const queueId: any = await queueModel.createQueueInfo(db, qData);
 
-            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber });
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId });
 
           }
 

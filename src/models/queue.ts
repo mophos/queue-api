@@ -14,10 +14,6 @@ export class QueueModel {
     ]);
   }
 
-  saveQueue(db: knex, data: any) {
-    return db('queue').insert(data);
-  }
-
   updateServicePointQueueNumber(db: knex, servicePointId, dateServ) {
     return db('q4u_queue_number')
       .where('service_point_id', servicePointId)
@@ -54,7 +50,7 @@ export class QueueModel {
         his_queue: qData.hisQueue,
         priority_id: qData.priorityId,
         date_create: qData.dateCreate
-      });
+      }, 'queue_id');
   }
 
   checkDuplicatedQueue(db: knex, hn: any, vn: any) {
@@ -184,4 +180,21 @@ export class QueueModel {
     return db.raw(sql, [dateServ]);
   }
 
+
+  getPrintInfo(db: knex, queueId: any) {
+    const sql = `
+    select q.hn, q.vn, q.queue_id, q.queue_number,
+    sp.service_point_name, sp.local_code, q.date_create,
+    (select hosname from q4u_system limit 1) as hosname,
+    (
+      select count(*) from q4u_queue where queue_id<? and room_id is null 
+      and service_point_id=q.service_point_id and date_serv=q.date_serv
+    ) as remain_queue, p.priority_name
+    from q4u_queue as q 
+    inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
+    left join q4u_priorities as p on p.priority_id=q.priority_id
+    where q.queue_id=?
+    `;
+    return db.raw(sql, [queueId, queueId]);
+  }
 }

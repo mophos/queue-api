@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/paper.css">
+
+  <title>QRCode for Queue</title>
+
+  <style>
+    @page {
+      size: QUEUE
+    }
+
+  </style>
+
+</head>
+
+<body class="QUEUE">
+  <section class="sheet padding-5mm">
+    <div class="justify-content-center">
+      <table style="width: 100%;">
+        <tbody>
+          <tr>
+            <td style="text-align: center;">
+              <img src="/assets/images/logo.png" style="width: 100px; height: 100px;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              <span style="font-size: 1.1rem; font-weight: bold;">
+                <%=hosname%></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              <span style="font-size: 1.1rem;">
+                <%=servicePointName%></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              <span style="font-size: 4rem; font-weight: bold;">
+                <%=queueNumber%></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              <img style='width:120px;height:120px;' src='<%=qrcode%>' />
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              ประเภท : <span>
+                <%=priorityName%></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">
+              <code><%=dateCreated%> / <%=remainQueue%> คิว</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </section>
+</body>
+
+</html>
