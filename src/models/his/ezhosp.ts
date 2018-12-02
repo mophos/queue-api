@@ -1,5 +1,4 @@
 import * as knex from 'knex';
-
 export class EzhospModel {
 
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
@@ -23,17 +22,17 @@ export class EzhospModel {
   }
 
   getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
-    var sql = db('opd_visit as o')
+    var sql = db('opd_visit')
       .select(db.raw('count(1) as total'))
-      .where('o.date', dateServ)
-      .whereIn('o.dep', localCode)
-      .whereNotIn('o.vn', vn);
+      .where('date', dateServ)
+      .whereIn('dep', localCode)
+      .whereNotIn('vn', vn);
 
     if (servicePointCode) {
-      sql.where('o.dep', servicePointCode);
+      sql.where('dep', servicePointCode);
     }
 
-    return sql.orderBy('o.time', 'asc');
+    return sql.orderBy('dep', 'asc');
   }
 
 }
