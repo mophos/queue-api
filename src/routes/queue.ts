@@ -8,6 +8,7 @@ const axios = require('axios');
 import { QueueModel } from '../models/queue';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
+import { EzhospModel } from './../models/his/ezhosp';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
@@ -15,7 +16,20 @@ const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
 
-var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+// var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+var hisModel: any;
+
+switch (process.env.HIS_TYPE) {
+  case 'hi':
+    hisModel = new HiModel();
+    break;
+  case 'ezhosp':
+    hisModel = new EzhospModel();
+    break;
+  default:
+    hisModel = new HosxpModel();
+    break;
+}
 
 const router = (fastify, { }, next) => {
 
