@@ -34,8 +34,8 @@ const router = (fastify, { }, next) => {
           const vn: any = info.vn;
           const priorityName: any = info.priority_name;
           const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
-
-          const qrcode = await QRCode.toDataURL('Q4U#4500004545#แผนกทันตกรรม#101#22001#20');
+          const localCode: any = info.local_code;
+          const qrcode = await QRCode.toDataURL(`Q4U#${process.env.Q4U_NOTIFY_TOPIC}#${localCode}#${servicePointName}#${priorityName}#${queueNumber}#${remainQueue}`);
 
           reply.view('./templates/queue-qrcode.ejs', {
             qrcode: qrcode,
