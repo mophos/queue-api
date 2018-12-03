@@ -29,7 +29,7 @@ app.register(
 );
 
 app.register(require('fastify-rate-limit'), {
-  max: +process.env.MAX_CONNECTION_PER_MINUTE || 100000,
+  max: +process.env.MAX_CONNECTION_PER_MINUTE || 1000000,
   timeWindow: '1 minute'
 });
 
@@ -69,7 +69,7 @@ app.decorate("authenticate", async (request, reply) => {
   }
 });
 
-app.register(require('./conn/db'), {
+app.register(require('./plugins/db'), {
   connection: {
     client: 'mysql',
     connection: {
@@ -93,7 +93,7 @@ app.register(require('./conn/db'), {
   connectionName: 'db'
 });
 
-app.register(require('./conn/db'), {
+app.register(require('./plugins/db'), {
   connection: {
     client: 'mysql',
     connection: {
@@ -115,6 +115,13 @@ app.register(require('./conn/db'), {
     debug: false,
   },
   connectionName: 'dbHIS'
+});
+
+// MQTT
+app.register(require('./plugins/mqtt'), {
+  host: process.env.LOCAL_NOTIFY_SERVER,
+  username: process.env.LOCAL_NOTIFY_USER,
+  password: process.env.LOCAL_NOTIFY_PASSWORD
 });
 
 app.register(require('./routes/index'), { prefix: '/v1', logger: true });

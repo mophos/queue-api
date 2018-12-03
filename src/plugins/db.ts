@@ -1,5 +1,5 @@
-const fastifyPlugin = require('fastify-plugin')
-const knex = require('knex')
+var fastifyPlugin = require('fastify-plugin')
+var knex = require('knex')
 
 function fastifyKnexJS(fastify, opts, next) {
   try {

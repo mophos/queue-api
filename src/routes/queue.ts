@@ -131,6 +131,9 @@ const router = (fastify, { }, next) => {
 
             reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId });
 
+            const topic = process.env.QUEUE_CENTER_TOPIC;
+            fastify.mqttClient.publish(topic, 'update visit');
+
           }
 
         } else {
@@ -198,10 +201,15 @@ const router = (fastify, { }, next) => {
   fastify.post('/pending', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const queueId = req.body.queueId;
+    const servicePointId = req.body.servicePointId;
 
     try {
       await queueModel.markPending(db, queueId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+
+      const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+      fastify.mqttClient.publish(servicePointTopic, 'update visit');
+
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
@@ -221,9 +229,9 @@ const router = (fastify, { }, next) => {
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
 
-      const topic = `${process.env.Q4U_NOTIFY_TOPIC}/${servicePointId}`;
+      // const topic = `${process.env.Q4U_NOTIFY_TOPIC}/${servicePointId}`;
 
-      console.log(topic);
+      // console.log(topic);
 
       // TODO
       // Send notify to H4U Server
@@ -233,6 +241,12 @@ const router = (fastify, { }, next) => {
       // }
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+      // publish mqtt
+      const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+      console.log(servicePointTopic);
+      const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+      fastify.mqttClient.publish(globalTopic, 'update visit');
+      fastify.mqttClient.publish(servicePointTopic, 'update visit');
 
     } catch (error) {
       fastify.log.error(error);
@@ -244,10 +258,16 @@ const router = (fastify, { }, next) => {
 
     const queueId = req.body.queueId;
     const roomId = req.body.roomId;
-
+    const servicePointId = req.body.servicePointId;
     try {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+
+      const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+      // const globalTopic = process.env.GLOBAL_NOTIFY_TOPIC;
+      // fastify.mqttClient.publish(globalTopic, 'update visit');
+      fastify.mqttClient.publish(servicePointTopic, 'update visit');
+
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
