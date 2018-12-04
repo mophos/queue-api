@@ -3,40 +3,51 @@ import * as knex from 'knex';
 export class MbaseModel {
 
     getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
-        var sql = db('ovst as o')
-            .select('o.vn', 'o.hn', db.raw('date(vstdttm) as date_serv'), db.raw('time(vstdttm) as time_serv'),
-                'o.cln as clinic_code', 'c.namecln as clinic_name', 'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
-                'pt.brthdate as birthdate', 'pt.male as sex', db.raw('"" as his_queue'))
-            .innerJoin('cln as c', 'c.cln', 'o.cln')
-            .innerJoin('pt', 'pt.hn', 'o.hn')
-            .whereRaw('date(vstdttm)=?', [dateServ])
-            .whereIn('o.cln', localCode)
-            .whereNotIn('o.vn', vn);
+        var sql = db('opd_visits as a')
+            .select('a.VISIT_ID as vn', 
+            'a.hn', 
+            db.raw('DATE(a.REG_DATETIME) as date_serv'),
+            db.raw('time(a.REG_DATETIME) as time_serv'),
+                'a.UNIT_REG as clinic_code', 
+                'b.UNIT_NAME as clinic_name', 
+                db.raw('"" as title'),
+                'd.FNAME as first_name', 
+                'd.LNAME as last_name',
+                'd.BIRTHDATE as birthdate', 
+                'd.SEX as sex', 
+                db.raw('"" as his_queue'))
+                .innerJoin('service_units as b', 'a.UNIT_REG', 'b.UNIT_ID')
+                .innerJoin('cid_hn as c', 'a.HN', 'c.HN')
+                .innerJoin('population as d', 'c.CID', 'd.CID')
+            .whereRaw('a.REG_DATETIME>=?', [dateServ])
+            .whereIn('b.unit_id', localCode)
+            .whereNotIn('a.VISIT_ID', vn);
 
         if (servicePointCode) {
-            sql.where('o.cln', servicePointCode);
+            sql.where('b.unit_id', servicePointCode);
         }
 
         return sql.limit(limit)
             .offset(offset)
-            .orderBy('o.vstdttm', 'asc');
+            .orderBy('a.REG_DATETIME', 'asc');
 
     }
 
     getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
-        var sql = db('ovst as o')
+        var sql = db('opd_visits as a')
             .select(db.raw('count(*) as total'))
-            .innerJoin('pt', 'pt.hn', 'o.hn')
-            .innerJoin('cln as c', 'c.cln', 'o.cln')
-            .whereRaw('date(o.vstdttm)=?', [dateServ])
-            .whereIn('o.cln', localCode)
-            .whereNotIn('o.vn', vn);
+            .innerJoin('service_units as b', 'a.UNIT_REG', 'b.UNIT_ID')
+            .innerJoin('cid_hn as c', 'a.HN', 'c.HN')
+            .innerJoin('population as d', 'c.CID', 'd.CID')
+        .whereRaw('a.REG_DATETIME>=?', [dateServ])
+        .whereIn('b.unit_id', localCode)
+        .whereNotIn('a.VISIT_ID', vn);
 
         if (servicePointCode) {
-            sql.where('o.cln', servicePointCode);
+            sql.where('b.unit_id', servicePointCode);
         }
 
-        return sql.orderBy('o.vstdttm', 'asc');
+        return sql.orderBy('a.REG_DATETIME', 'asc');
     }
 
 }
