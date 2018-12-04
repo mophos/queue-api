@@ -25,7 +25,15 @@ const router = (fastify, { }, next) => {
         reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, message: 'ชื่อผู้ใช้งานหรือรหัสผ่าน ไม่ถูกต้อง' })
       } else {
         const info = rs[0];
-        const token = fastify.jwt.sign({ fullname: info.fullname, userId: info.user_id }, { expiresIn: '1d' });
+        const token = fastify.jwt.sign({
+          fullname: info.fullname,
+          userId: info.user_id,
+          GLOBAL_NOTIFY_TOPIC: process.env.GLOBAL_NOTIFY_TOPIC,
+          QUEUE_CENTER_TOPIC: process.env.QUEUE_CENTER_TOPIC,
+          SERVICE_POINT_TOPIC: process.env.SERVICE_POINT_TOPIC,
+          NOTIFY_USER: process.env.LOCAL_NOTIFY_USER,
+          NOTIFY_PASSWORD: process.env.LOCAL_NOTIFY_PASSWORD,
+        }, { expiresIn: '1d' });
         reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, token: token });
       }
     } catch (error) {

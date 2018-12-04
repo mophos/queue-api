@@ -1,42 +1,38 @@
 import * as knex from 'knex';
-
 export class EzhospModel {
 
     getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
-        var sql = db('ovst as o')
-            .select('o.vn', 'o.hn', db.raw('date(vstdttm) as date_serv'), db.raw('time(vstdttm) as time_serv'),
-                'o.cln as clinic_code', 'c.namecln as clinic_name', 'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
-                'pt.brthdate as birthdate', 'pt.male as sex', db.raw('"" as his_queue'))
-            .innerJoin('cln as c', 'c.cln', 'o.cln')
-            .innerJoin('pt', 'pt.hn', 'o.hn')
-            .whereRaw('date(vstdttm)=?', [dateServ])
-            .whereIn('o.cln', localCode)
+        var sql = db('view_opd_visit as o')
+            .select('o.vn', 'o.hn', db.raw('o.date as date_serv'), db.raw('o.time as time_serv'),
+                'o.dep as clinic_code', 'o.dep_name as clinic_name',
+                'o.title', 'o.name as first_name', 'o.surname as last_name',
+                'pt.birth as birthdate', 'o.sex', 'o.queue as his_queue')
+            .where('o.date', dateServ)
+            .whereIn('o.dep', localCode)
             .whereNotIn('o.vn', vn);
 
         if (servicePointCode) {
-            sql.where('o.cln', servicePointCode);
+            sql.where('o.dep', servicePointCode);
         }
 
         return sql.limit(limit)
             .offset(offset)
-            .orderBy('o.vstdttm', 'asc');
+            .orderBy('o.time', 'asc');
 
     }
 
     getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
-        var sql = db('ovst as o')
-            .select(db.raw('count(*) as total'))
-            .innerJoin('pt', 'pt.hn', 'o.hn')
-            .innerJoin('cln as c', 'c.cln', 'o.cln')
-            .whereRaw('date(o.vstdttm)=?', [dateServ])
-            .whereIn('o.cln', localCode)
-            .whereNotIn('o.vn', vn);
+        var sql = db('opd_visit')
+            .select(db.raw('count(1) as total'))
+            .where('date', dateServ)
+            .whereIn('dep', localCode)
+            .whereNotIn('vn', vn);
 
         if (servicePointCode) {
-            sql.where('o.cln', servicePointCode);
+            sql.where('dep', servicePointCode);
         }
 
-        return sql.orderBy('o.vstdttm', 'asc');
+        return sql.orderBy('dep', 'asc');
     }
 
 }

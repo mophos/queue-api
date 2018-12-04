@@ -104,6 +104,9 @@ const router = (fastify, { }, next) => {
 
               reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber });
 
+              const topic = process.env.QUEUE_CENTER_TOPIC;
+              fastify.mqttClient.publish(topic, 'update visit');
+
             }
 
           } else {
