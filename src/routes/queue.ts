@@ -104,9 +104,9 @@ const router = (fastify, { }, next) => {
 
           // get prefix
           const rsPriorityPrefix: any = await priorityModel.getPrefix(db, priorityId);
-          const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || 'T';
+          const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || '0';
           const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
-          const prefixPoint: any = rsPointPrefix[0].prefix || 'T';
+          const prefixPoint: any = rsPointPrefix[0].prefix || '0';
 
           const rsDup: any = await queueModel.checkDuplicatedQueue(db, hn, vn);
           if (rsDup[0].total > 0) {
