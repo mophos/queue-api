@@ -4,7 +4,6 @@ import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
 import * as moment from 'moment';
 const request = require('request')
-const rp = require('request-promise');
 
 import { QueueModel } from '../models/queue';
 import { HiModel } from '../models/his/hi';
