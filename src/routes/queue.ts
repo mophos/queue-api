@@ -3,7 +3,7 @@ import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
 import * as moment from 'moment';
-const axios = require('axios');
+const request = require('request')
 
 import { QueueModel } from '../models/queue';
 import { EzhospModel } from '../models/his/ezhosp';
@@ -245,6 +245,7 @@ const router = (fastify, { }, next) => {
 
     const queueId = req.params.queueId;
     const servicePointId = req.body.servicePointId;
+    const servicePointCode = req.body.servicePointCode;
     const roomId = req.body.roomId;
 
     try {
@@ -253,22 +254,44 @@ const router = (fastify, { }, next) => {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
-
-      // const topic = `${process.env.Q4U_NOTIFY_TOPIC}/${servicePointId}`;
-
-      // console.log(topic);
-
-      // TODO
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
       // Send notify to H4U Server
       // 
-      // if (process.env.ENABLE_Q4U === '1') {
-      //   await axios.post(process.env.Q4U_NOTIFY_URL, { })
-      // }
+      if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
+
+        // console.log(rsQueue[0]);
+        if (rsQueue[0].length) {
+          const data = rsQueue[0][0];
+          // console.log(process.env.Q4U_NOTIFY_URL);
+
+          const params = {
+            hosid: data.hosid,
+            servicePointCode: data.service_point_code,
+            queueNumber: data.queue_number,
+            roomNumber: data.room_number,
+            token: process.env.Q4U_NOTIFY_TOKEN,
+            roomName: data.room_name,
+            remainQueue: data.remain_queue,
+            dateServ: moment(data.date_serv).format('YYYYMMDD'),
+          };
+
+          // console.log(params);
+
+          request.post(process.env.Q4U_NOTIFY_URL, {
+            form: params
+          }, (err, res, body) => {
+            if (err) console.log(err);
+            console.log(body);
+          });
+
+        }
+
+      }
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
-      console.log(servicePointTopic);
+
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
       fastify.mqttClient.publish(globalTopic, 'update visit');
       fastify.mqttClient.publish(servicePointTopic, 'update visit');

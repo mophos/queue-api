@@ -16,12 +16,12 @@ MAX_CONNECTION_PER_MINUTE=1000000
 
 ################### Queue Service for H4U #####################
 # Enable Q4U
-# 0 = disabled, 1 = enable
-ENABLE_Q4U=0
+# N = disabled, Y = enable
+ENABLE_Q4U=Y
 # HOSID from Q4U
-Q4U_NOTIFY_TOPIC=0000
-Q4U_NOTIFY_TOKEN=q4u
-Q4U_NOTIFY_URL=http://203.157.103.14/q4u/notify-hos
+Q4U_NOTIFY_TOPIC=3YXTZNG2M3WNY89IONE1AECDDE
+Q4U_NOTIFY_TOKEN=5XLRBYWWK3I9BE33IBFUWSOEW
+Q4U_NOTIFY_URL=http://xx.xx.xx.xx
 ###############################################################
 
 # HIS_TYPE เช่น hi, hosxp
@@ -30,11 +30,11 @@ HIS_TYPE=hi
 QUEUE_DIGIT=3
 
 LOCAL_NOTIFY_SERVER=127.0.0.1
-LOCAL_NOTIFY_USER=test
-LOCAL_NOTIFY_PASSWORD=test
+LOCAL_NOTIFY_USER=xxx
+LOCAL_NOTIFY_PASSWORD=xxx
 
 QUEUE_CENTER_TOPIC=queue/center
 SERVICE_POINT_TOPIC=queue/service-point
 
-HTTP_PORT=3000
-HTTP_ADDRESS=127.0.0.1
+HTTP_PORT=3002
+HTTP_ADDRESS=0.0.0.0
