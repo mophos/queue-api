@@ -161,7 +161,13 @@ export class QueueModel {
     const sql = `
     select a.*, r.room_name, r.room_number, q.queue_number, sp.service_point_name,
      p.title, p.first_name, p.last_name, p.hn,
-    (select count(*) as total from q4u_queue as qx where qx.service_point_id=a.service_point_id and qx.room_id is null) as total
+    (
+      select count(*) as total 
+      from q4u_queue as qx 
+      where qx.service_point_id=a.service_point_id 
+      and qx.room_id is null
+      and qx.date_serv=?
+    ) as total
     from (
     select qd1.*
     from q4u_queue_detail as qd1
@@ -177,7 +183,7 @@ export class QueueModel {
     order by sp.service_point_name
     `;
 
-    return db.raw(sql, [dateServ]);
+    return db.raw(sql, [dateServ, dateServ]);
   }
 
 
