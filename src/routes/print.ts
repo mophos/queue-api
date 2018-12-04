@@ -27,15 +27,18 @@ const router = (fastify, { }, next) => {
         if (rs[0].length) {
           const info: any = rs[0][0];
           const hosname: any = info.hosname;
+          const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
           const servicePointName: any = info.service_point_name;
           const remainQueue: any = info.remain_queue || 0;
           const hn: any = info.hn;
           const vn: any = info.vn;
           const priorityName: any = info.priority_name;
+          const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
+          const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
           const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
           const localCode: any = info.local_code;
-          const qrcode = await QRCode.toDataURL(`Q4U#${process.env.Q4U_NOTIFY_TOPIC}#${localCode}#${servicePointName}#${priorityName}#${queueNumber}#${remainQueue}`);
+          const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);
 
           reply.view('./templates/queue-qrcode.ejs', {
             qrcode: qrcode,
