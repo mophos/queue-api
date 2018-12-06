@@ -88,7 +88,7 @@ app.register(require('./plugins/db'), {
         });
       }
     },
-    debug: false,
+    debug: true,
   },
   connectionName: 'db'
 });
@@ -112,7 +112,7 @@ app.register(require('./plugins/db'), {
         });
       }
     },
-    debug: false,
+    debug: true,
   },
   connectionName: 'dbHIS'
 });
