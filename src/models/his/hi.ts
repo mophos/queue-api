@@ -71,7 +71,6 @@ export class HiModel {
         return _where;
       });
 
-
     }
 
     if (servicePointCode) {

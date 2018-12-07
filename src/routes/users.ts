@@ -4,6 +4,7 @@ import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
 import * as Random from 'random-js';
+import * as crypto from 'crypto';
 
 import { UserModel } from '../models/user';
 
@@ -26,13 +27,16 @@ const router = (fastify, { }, next) => {
 
   fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const username = req.body.username;
+
     const password = req.body.password;
+    const encPassword = crypto.createHash('md5').update(password).digest('hex');
+
     const fullname = req.body.fullname;
     const isActive = req.body.isActive;
 
     const data: any = {
       username: username,
-      password: password,
+      password: encPassword,
       fullname: fullname,
       is_active: isActive
     };
@@ -68,9 +72,11 @@ const router = (fastify, { }, next) => {
   fastify.put('/changepass/:userId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId = req.params.userId;
     const password = req.body.password;
+    const encPassword = crypto.createHash('md5').update(password).digest('hex');
+
 
     const info: any = {
-      password: password
+      password: encPassword
     };
 
     try {
