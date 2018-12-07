@@ -301,26 +301,33 @@ const router = (fastify, { }, next) => {
         // console.log(rsQueue[0]);
         if (rsQueue[0].length) {
           const data = rsQueue[0][0];
-          // console.log(process.env.Q4U_NOTIFY_URL);
+          console.log(process.env.Q4U_NOTIFY_URL);
+
+          // queue without prefix
+          const prefixLength = 2;
+          const digiLength = +process.env.QUEUE_DIGIT || 3;
+          const totalLength = prefixLength + digiLength;
+
+          const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
 
           const params = {
             hosid: data.hosid,
             servicePointCode: data.service_point_code,
             queueNumber: data.queue_number,
+            queueWithoutPrefix: queueWithoutPrefix,
             roomNumber: data.room_number,
             token: process.env.Q4U_NOTIFY_TOKEN,
             roomName: data.room_name,
-            remainQueue: data.remain_queue,
             dateServ: moment(data.date_serv).format('YYYYMMDD'),
           };
 
-          // console.log(params);
+          console.log(params);
 
           request.post(process.env.Q4U_NOTIFY_URL, {
             form: params
           }, (err, res, body) => {
             if (err) console.log(err);
-            // console.log(body);
+            console.log(body);
           });
 
         }
