@@ -249,6 +249,7 @@ const router = (fastify, { }, next) => {
 
         var queueNumber = 0;
         var strQueueNumber = null;
+        var newQueueId = null;
 
         var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
 
@@ -277,11 +278,11 @@ const router = (fastify, { }, next) => {
         qData.dateCreate = dateCreate;
         qData.hisQueue = hisQueue;
 
-        await queueModel.createQueueInfo(db, qData);
+        newQueueId = await queueModel.createQueueInfo(db, qData);
 
       }
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber });
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
       fastify.mqttClient.publish(servicePointTopic, 'update visit');
@@ -304,6 +305,7 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
+      await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
       const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
@@ -382,7 +384,7 @@ const router = (fastify, { }, next) => {
 
     try {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
-      await queueModel.removeCurrentQueue(db, servicePointId, dateServ, roomId);
+      await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.changeCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 

@@ -153,11 +153,11 @@ export class QueueModel {
       .update('room_id', roomId);
   }
 
-  removeCurrentQueue(db: knex, servicePointId, dateServ, roomId) {
+  removeCurrentQueue(db: knex, servicePointId, dateServ, queueId) {
     return db('q4u_queue_detail')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
-      .where('room_id', roomId)
+      .where('queue_id', queueId)
       .del();
   }
 
