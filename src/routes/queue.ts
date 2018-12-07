@@ -17,7 +17,7 @@ import { PriorityModel } from '../models/priority';
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
-const hisType = process.env.HIS_TYPE;
+const hisType = process.env.HIS_TYPE || 'hosxp';
 
 // var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
 // ห้ามแก้ไข // 
