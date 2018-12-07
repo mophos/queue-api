@@ -53,9 +53,10 @@ export class QueueModel {
       }, 'queue_id');
   }
 
-  checkDuplicatedQueue(db: knex, hn: any, vn: any) {
+  checkDuplicatedQueue(db: knex, hn: any, vn: any, servicePointId: any) {
     return db('q4u_queue')
       .select(db.raw('count(*) as total'))
+      .where('service_point_id', servicePointId)
       .where('hn', hn)
       .where('vn', vn);
   }
@@ -109,12 +110,13 @@ export class QueueModel {
       .select('qd.service_point_id', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
-        'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name')
+        'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .leftJoin('q4u_service_points as sp2', 'sp2.service_point_id', 'q.pending_to_service_point_id')
       .where('qd.date_serv', dateServ)
       .where('qd.service_point_id', servicePointId)
       .where('q.mark_pending', 'Y')
@@ -143,6 +145,22 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueId]);
   }
 
+  changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
+    return db('q4u_queue_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .where('queue_id', queueId)
+      .update('room_id', roomId);
+  }
+
+  removeCurrentQueue(db: knex, servicePointId, dateServ, queueId) {
+    return db('q4u_queue_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .where('queue_id', queueId)
+      .del();
+  }
+
   getCurrentVisitOnQueue(db: knex, dateServ: any) {
     var sql = db('q4u_queue')
       .select('vn')
@@ -150,10 +168,16 @@ export class QueueModel {
     return sql;
   }
 
-  markPending(db: knex, queueId: any) {
+  markPending(db: knex, queueId: any, servicePointId: any) {
     return db('q4u_queue')
       .where('queue_id', queueId)
-      .update({ mark_pending: 'Y' });
+      .update({ mark_pending: 'Y', pending_to_service_point_id: servicePointId });
+  }
+
+  getDuplicatedQueueInfo(db: knex, queueId: any) {
+    return db('q4u_queue')
+      .where('queue_id', queueId)
+      .limit(1);
   }
 
   getCurrentQueueList(db: knex, dateServ: any) {
