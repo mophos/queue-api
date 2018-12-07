@@ -145,6 +145,22 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueId]);
   }
 
+  changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
+    return db('q4u_queue_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .where('queue_id', queueId)
+      .update('room_id', roomId);
+  }
+
+  removeCurrentQueue(db: knex, servicePointId, dateServ, roomId) {
+    return db('q4u_queue_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .where('room_id', roomId)
+      .del();
+  }
+
   getCurrentVisitOnQueue(db: knex, dateServ: any) {
     var sql = db('q4u_queue')
       .select('vn')

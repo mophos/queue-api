@@ -56,8 +56,6 @@ const router = (fastify, { }, next) => {
     const servicePointCode: any = req.query.servicePointCode || '';
     const query: any = req.query.query || '';
 
-    console.log(req.query);
-
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
       const rsLocalCode: any = await servicePointModel.getLocalCode(db);
@@ -285,8 +283,9 @@ const router = (fastify, { }, next) => {
 
     const queueId = req.params.queueId;
     const servicePointId = req.body.servicePointId;
-    const servicePointCode = req.body.servicePointCode;
     const roomId = req.body.roomId;
+    const roomNumber = req.body.roomNumber;
+    const queueNumber = req.body.queueNumber;
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -321,7 +320,7 @@ const router = (fastify, { }, next) => {
             form: params
           }, (err, res, body) => {
             if (err) console.log(err);
-            console.log(body);
+            // console.log(body);
           });
 
         }
@@ -329,12 +328,20 @@ const router = (fastify, { }, next) => {
       }
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
 
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
       fastify.mqttClient.publish(globalTopic, 'update visit');
-      fastify.mqttClient.publish(servicePointTopic, 'update visit');
+
+      const payload = {
+        queueNumber: queueNumber,
+        roomNumber: roomNumber,
+        servicePointId: servicePointId
+      }
+
+      fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
 
     } catch (error) {
       fastify.log.error(error);
@@ -346,15 +353,28 @@ const router = (fastify, { }, next) => {
 
     const queueId = req.body.queueId;
     const roomId = req.body.roomId;
+    const roomNumber = req.body.roomNumber;
+    const queueNumber = req.body.queueNumber;
+
     const servicePointId = req.body.servicePointId;
+
+    const dateServ = moment().format('YYYY-MM-DD');
+
     try {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
+      await queueModel.removeCurrentQueue(db, servicePointId, dateServ, roomId);
+      await queueModel.changeCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
-      // const globalTopic = process.env.GLOBAL_NOTIFY_TOPIC;
-      // fastify.mqttClient.publish(globalTopic, 'update visit');
-      fastify.mqttClient.publish(servicePointTopic, 'update visit');
+
+      const payload = {
+        queueNumber: queueNumber,
+        roomNumber: roomNumber,
+        servicePointId: servicePointId
+      }
+
+      fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
 
     } catch (error) {
       fastify.log.error(error);
