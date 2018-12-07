@@ -29,6 +29,14 @@ const router = (fastify, { }, next) => {
           const hosname: any = info.hosname;
           const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
+
+          // queue without prefix
+          const prefixLength = 2;
+          const digiLength = +process.env.QUEUE_DIGIT || 3;
+          const totalLength = prefixLength + digiLength;
+
+          const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+
           const servicePointName: any = info.service_point_name;
           const remainQueue: any = info.remain_queue || 0;
           const hn: any = info.hn;
@@ -38,7 +46,7 @@ const router = (fastify, { }, next) => {
           const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
           const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
           const localCode: any = info.local_code;
-          const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);
+          const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);
 
           reply.view('./templates/queue-qrcode.ejs', {
             qrcode: qrcode,

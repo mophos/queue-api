@@ -67,7 +67,7 @@ const router = (fastify, { }, next) => {
             const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
             const prefixPoint: any = rsPointPrefix[0].prefix || 'T';
 
-            const rsDup: any = await queueModel.checkDuplicatedQueue(db, hn, vn);
+            const rsDup: any = await queueModel.checkDuplicatedQueue(db, hn, vn, servicePointId);
             if (rsDup[0].total > 0) {
               reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลการรับบริการซ้ำ' })
             } else {
