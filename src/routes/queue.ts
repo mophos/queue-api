@@ -237,6 +237,8 @@ const router = (fastify, { }, next) => {
         const prefixPoint: any = rsPointPrefix[0].prefix || '0';
 
         var queueNumber = 0;
+        var strQueueNumber = null;
+
         var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
 
         if (rs1.length) {
@@ -250,7 +252,7 @@ const router = (fastify, { }, next) => {
         const queueDigit = +process.env.QUEUE_DIGIT || 3;
         const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-        const strQueueNumber: string = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+        strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
         const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
         const qData: any = {};
@@ -268,7 +270,7 @@ const router = (fastify, { }, next) => {
 
       }
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber });
 
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
       fastify.mqttClient.publish(servicePointTopic, 'update visit');
