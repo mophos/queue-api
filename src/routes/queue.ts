@@ -6,29 +6,40 @@ import * as moment from 'moment';
 const request = require('request')
 
 import { QueueModel } from '../models/queue';
+import { EzhospModel } from '../models/his/ezhosp';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
-import { EzhospModel } from './../models/his/ezhosp';
+import { MbaseModel } from '../models/his/mbase';
+import { HomcModel } from '../models/his/homc';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
+const hisType = process.env.HIS_TYPE || 'hosxp';
 
 // var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+// ห้ามแก้ไข // 
 var hisModel: any;
-
-switch (process.env.HIS_TYPE) {
-  case 'hi':
-    hisModel = new HiModel();
-    break;
+switch (hisType) {
   case 'ezhosp':
     hisModel = new EzhospModel();
     break;
-  default:
+  case 'hosxp':
     hisModel = new HosxpModel();
     break;
+  case 'hi':
+    hisModel = new HiModel();
+    break;
+  case 'homc':
+    hisModel = new HomcModel();
+    break;
+  case 'mbase':
+    hisModel = new MbaseModel();
+    break;
+  default:
+  // hisModel = new HisModel();
 }
 
 const router = (fastify, { }, next) => {
