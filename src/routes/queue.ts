@@ -139,7 +139,13 @@ const router = (fastify, { }, next) => {
             const queueDigit = +process.env.QUEUE_DIGIT || 3;
             const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-            const strQueueNumber: string = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+            var strQueueNumber: string = null;
+
+            if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+              strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+            } else {
+              strQueueNumber = `${prefixPoint}${_queueNumber}`;
+            }
             const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
             const qData: any = {};
@@ -279,7 +285,12 @@ const router = (fastify, { }, next) => {
         const queueDigit = +process.env.QUEUE_DIGIT || 3;
         const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-        strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+        if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+          strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+        } else {
+          strQueueNumber = `${prefixPoint}${_queueNumber}`;
+        }
+
         const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
         const qData: any = {};
