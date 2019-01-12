@@ -120,7 +120,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
-      .limit(5)
+      .limit(10)
       .orderBy('q.date_update', 'desc');
   }
 

@@ -14,7 +14,7 @@ const router = (fastify, { }, next) => {
 
   var db: Knex = fastify.db;
 
-  fastify.get('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.get('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
       const rs: any = await userModel.list(db);
@@ -25,7 +25,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const username = req.body.username;
 
     const password = req.body.password;
@@ -33,12 +33,14 @@ const router = (fastify, { }, next) => {
 
     const fullname = req.body.fullname;
     const isActive = req.body.isActive;
+    const userType = req.body.userType;
 
     const data: any = {
       username: username,
       password: encPassword,
       fullname: fullname,
-      is_active: isActive
+      is_active: isActive,
+      user_type: userType,
     };
 
     try {
@@ -50,15 +52,23 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.put('/:userId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId = req.params.userId;
     const fullname = req.body.fullname;
     const isActive = req.body.isActive;
+    const password = req.body.password;
+    const userType = req.body.userType;
 
     const info: any = {
       fullname: fullname,
-      is_active: isActive
+      is_active: isActive,
+      user_type: userType
     };
+
+    if (password) {
+      var encPass = crypto.createHash('md5').update('md5').digest('hex');
+      info.password = encPass;
+    }
 
     try {
       await userModel.update(db, userId, info);
@@ -69,11 +79,10 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.put('/changepass/:userId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/changepass/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId = req.params.userId;
     const password = req.body.password;
     const encPassword = crypto.createHash('md5').update(password).digest('hex');
-
 
     const info: any = {
       password: encPassword
@@ -88,7 +97,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.delete('/:userId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId: any = req.params.userId;
 
     try {

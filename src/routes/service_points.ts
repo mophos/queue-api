@@ -26,7 +26,7 @@ const router = (fastify, { }, next) => {
   })
 
   // save new service point
-  fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointName = req.body.servicePointName;
     const localCode = req.body.localCode;
     const servicePointAbbr = req.body.servicePointAbbr;
@@ -51,7 +51,7 @@ const router = (fastify, { }, next) => {
   })
 
   // update service point
-  fastify.put('/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/:servicePointId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointId: any = req.params.servicePointId;
     const servicePointName = req.body.servicePointName;
     const localCode = req.body.localCode;
@@ -77,7 +77,7 @@ const router = (fastify, { }, next) => {
   })
 
   // remove service point
-  fastify.delete('/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/:servicePointId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointId: any = req.params.servicePointId;
 
     try {

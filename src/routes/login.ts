@@ -28,6 +28,7 @@ const router = (fastify, { }, next) => {
         const token = fastify.jwt.sign({
           fullname: info.fullname,
           userId: info.user_id,
+          userType: info.user_type,
           GLOBAL_NOTIFY_TOPIC: process.env.GLOBAL_NOTIFY_TOPIC,
           QUEUE_CENTER_TOPIC: process.env.QUEUE_CENTER_TOPIC,
           SERVICE_POINT_TOPIC: process.env.SERVICE_POINT_TOPIC,
