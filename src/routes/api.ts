@@ -100,12 +100,43 @@ const router = (fastify, { }, next) => {
               qData.dateCreate = dateCreate;
               qData.hisQueue = hisQueue;
 
-              await queueModel.createQueueInfo(db, qData);
+              var rsQueue: any = await queueModel.createQueueInfo(db, qData);
+              var queueId = rsQueue[0];
 
-              reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber });
+              const rs: any = await queueModel.getPrintInfo(db, queueId);
 
-              const topic = process.env.QUEUE_CENTER_TOPIC;
-              fastify.mqttClient.publish(topic, 'update visit');
+              if (rs[0].length) {
+                const info: any = rs[0][0];
+                const hosname: any = info.hosname;
+                const hosid: any = info.hosid;
+                const queueNumber: any = info.queue_number;
+
+                // queue without prefix
+                const prefixLength = 2;
+                const digiLength = +process.env.QUEUE_DIGIT || 3;
+                const totalLength = prefixLength + digiLength;
+
+                const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+
+                const servicePointName: any = info.service_point_name;
+                // const remainQueue: any = info.remain_queue || 0;
+                const hn: any = info.hn;
+                const vn: any = info.vn;
+                const priorityName: any = info.priority_name;
+                const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
+                const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
+                // const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
+                const localCode: any = info.local_code;
+                const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
+
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
+
+                const topic = process.env.QUEUE_CENTER_TOPIC;
+                fastify.mqttClient.publish(topic, 'update visit');
+
+              } else {
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.BAD_REQUEST, message: 'ไม่พบรหัสคิวที่ต้องการ' })
+              }
 
             }
 
