@@ -5,7 +5,9 @@ import * as fastify from 'fastify';
 import * as crypto from 'crypto';
 import * as HttpStatus from 'http-status-codes';
 import { UserModel } from '../models/user';
+import { UserServicePointsModel } from '../models/user_service_point';
 
+const userServicePointModel = new UserServicePointsModel();
 const userModel = new UserModel();
 
 const router = (fastify, { }, next) => {
@@ -25,6 +27,9 @@ const router = (fastify, { }, next) => {
         reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, message: 'ชื่อผู้ใช้งานหรือรหัสผ่าน ไม่ถูกต้อง' })
       } else {
         const info = rs[0];
+
+        const rsPoints = await userServicePointModel.list(db, info.user_id);
+
         const token = fastify.jwt.sign({
           fullname: info.fullname,
           userId: info.user_id,
@@ -37,7 +42,10 @@ const router = (fastify, { }, next) => {
           NOTIFY_SERVER: process.env.LOCAL_NOTIFY_SERVER,
           NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT
         }, { expiresIn: '1d' });
-        reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, token: token });
+        reply.status(HttpStatus.OK).send({
+          statusCode: HttpStatus.OK, token: token,
+          servicePoints: rsPoints
+        });
       }
     } catch (error) {
       fastify.log.error(error);
