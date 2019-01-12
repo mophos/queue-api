@@ -28,11 +28,14 @@ const router = (fastify, { }, next) => {
         const token = fastify.jwt.sign({
           fullname: info.fullname,
           userId: info.user_id,
+          userType: info.user_type,
           GLOBAL_NOTIFY_TOPIC: process.env.GLOBAL_NOTIFY_TOPIC,
           QUEUE_CENTER_TOPIC: process.env.QUEUE_CENTER_TOPIC,
           SERVICE_POINT_TOPIC: process.env.SERVICE_POINT_TOPIC,
           NOTIFY_USER: process.env.LOCAL_NOTIFY_USER,
           NOTIFY_PASSWORD: process.env.LOCAL_NOTIFY_PASSWORD,
+          NOTIFY_SERVER: process.env.LOCAL_NOTIFY_SERVER,
+          NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT
         }, { expiresIn: '1d' });
         reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, token: token });
       }

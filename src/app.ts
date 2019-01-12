@@ -124,6 +124,23 @@ app.register(require('./plugins/mqtt'), {
   password: process.env.LOCAL_NOTIFY_PASSWORD
 });
 
+
+app.decorate('verifyAdmin', function (request, reply, done) {
+  if (request.user.userType === 'ADMIN') {
+    done();
+  } else {
+    reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) });
+  }
+});
+
+app.decorate('verifyMember', function (request, reply, done) {
+  if (request.user.userType === 'MEMBER') {
+    done();
+  } else {
+    reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) });
+  }
+});
+
 app.register(require('./routes/index'), { prefix: '/v1', logger: true });
 app.register(require('./routes/login'), { prefix: '/v1/login', logger: true });
 app.register(require('./routes/users'), { prefix: '/v1/users', logger: true });

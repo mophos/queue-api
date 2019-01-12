@@ -25,7 +25,7 @@ const router = (fastify, { }, next) => {
   })
 
   // save new service room
-  fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const roomName = req.body.roomName;
     const roomNumber = req.body.roomNumber;
     const servicePointId = req.body.servicePointId;
@@ -46,7 +46,7 @@ const router = (fastify, { }, next) => {
   })
 
   // update service room
-  fastify.put('/:roomId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/:roomId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const roomId: any = req.params.roomId;
     const roomName = req.body.roomName;
     const roomNumber = req.body.roomNumber;
@@ -68,7 +68,7 @@ const router = (fastify, { }, next) => {
   })
 
   // remove service point
-  fastify.delete('/:roomId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/:roomId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const roomId: any = req.params.roomId;
 
     try {

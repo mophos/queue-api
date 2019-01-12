@@ -6,29 +6,40 @@ import * as moment from 'moment';
 const request = require('request')
 
 import { QueueModel } from '../models/queue';
+import { EzhospModel } from '../models/his/ezhosp';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
-import { EzhospModel } from './../models/his/ezhosp';
+import { MbaseModel } from '../models/his/mbase';
+import { HomcModel } from '../models/his/homc';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
+const hisType = process.env.HIS_TYPE || 'hosxp';
 
 // var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
+// ห้ามแก้ไข // 
 var hisModel: any;
-
-switch (process.env.HIS_TYPE) {
-  case 'hi':
-    hisModel = new HiModel();
-    break;
+switch (hisType) {
   case 'ezhosp':
     hisModel = new EzhospModel();
     break;
-  default:
+  case 'hosxp':
     hisModel = new HosxpModel();
     break;
+  case 'hi':
+    hisModel = new HiModel();
+    break;
+  case 'homc':
+    hisModel = new HomcModel();
+    break;
+  case 'mbase':
+    hisModel = new MbaseModel();
+    break;
+  default:
+  // hisModel = new HisModel();
 }
 
 const router = (fastify, { }, next) => {
@@ -128,7 +139,13 @@ const router = (fastify, { }, next) => {
             const queueDigit = +process.env.QUEUE_DIGIT || 3;
             const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-            const strQueueNumber: string = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+            var strQueueNumber: string = null;
+
+            if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+              strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+            } else {
+              strQueueNumber = `${prefixPoint}${_queueNumber}`;
+            }
             const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
             const qData: any = {};
@@ -198,6 +215,21 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.get('/working/history/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const servicePointId = req.params.servicePointId;
+
+    try {
+      const dateServ: any = moment().format('YYYY-MM-DD');
+
+      const rs: any = await queueModel.getWorkingHistory(db, dateServ, servicePointId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
   fastify.get('/pending/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
@@ -253,7 +285,12 @@ const router = (fastify, { }, next) => {
         const queueDigit = +process.env.QUEUE_DIGIT || 3;
         const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-        strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+        if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+          strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+        } else {
+          strQueueNumber = `${prefixPoint}${_queueNumber}`;
+        }
+
         const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
         const qData: any = {};
