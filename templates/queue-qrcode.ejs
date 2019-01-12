@@ -22,7 +22,7 @@
 </head>
 
 <body class="QUEUE">
-  <section class="sheet padding-5mm">
+  <section class="sheet padding-5mm center">
     <div class="justify-content-center">
       <table style="width: 100%;">
         <tbody>
@@ -33,13 +33,13 @@
           </tr>
           <tr>
             <td style="text-align: center;">
-              <span style="font-size: 1.1rem; font-weight: bold;">
+              <span style="font-size: 1.5rem; font-weight: bold;">
                 <%=hosname%></span>
             </td>
           </tr>
           <tr>
             <td style="text-align: center;">
-              <span style="font-size: 1.1rem;">
+              <span style="font-size: 1.5rem; font-weight: bold;">
                 <%=servicePointName%></span>
             </td>
           </tr>
@@ -49,15 +49,29 @@
                 <%=queueNumber%></span>
             </td>
           </tr>
-          <tr>
-            <td style="text-align: center;">
-              <img style='width:120px;height:120px;' src='<%=qrcode%>' />
-            </td>
-          </tr>
+
           <tr>
             <td style="text-align: center;">
               <span>
+                ประเภท
                 <%=priorityName%></span>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="text-align: center;">
+              <span style="font-size: 1.5rem; font-weight: bold;">
+                คิวซักประวัติ
+              </span>
+              <br>
+              <span style="font-size: 2rem; font-weight: bold;">
+                <%=queueId%></span>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="text-align: center;">
+              <img style='width:180px;height:180px;' src='<%=qrcode%>' />
             </td>
           </tr>
           <tr>
@@ -72,6 +86,7 @@
               <code><%=dateCreated%></code>
             </td>
           </tr>
+
         </tbody>
       </table>
 

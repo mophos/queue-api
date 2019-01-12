@@ -57,7 +57,8 @@ const router = (fastify, { }, next) => {
             dateCreated: dateCreated,
             servicePointName: servicePointName,
             remainQueue: remainQueue,
-            priorityName: priorityName
+            priorityName: priorityName,
+            queueId: queueId
           });
 
         } else {

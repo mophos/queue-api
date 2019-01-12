@@ -129,7 +129,7 @@ const router = (fastify, { }, next) => {
                 const localCode: any = info.local_code;
                 const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
 
-                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueId: queueId, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
 
                 const topic = process.env.QUEUE_CENTER_TOPIC;
                 fastify.mqttClient.publish(topic, 'update visit');
