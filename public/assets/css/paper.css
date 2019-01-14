@@ -9,7 +9,7 @@ body { margin: 0 }
 }
 
 /** Paper sizes **/
-body.QUEUE            .sheet { width: 288px; height: 480px }
+body.QUEUE            .sheet { width: 488px; height: 680px }
 
 /** Padding area **/
 .sheet.padding-5mm { padding: 5mm }

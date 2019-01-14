@@ -245,6 +245,19 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.put('/interview/marked/:queueId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const queueId = req.params.queueId;
+
+    try {
+      await queueModel.markInterview(db, queueId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
   fastify.post('/pending', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const queueId = req.body.queueId;
@@ -326,6 +339,7 @@ const router = (fastify, { }, next) => {
     const roomId = req.body.roomId;
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
+    const isCompleted = req.body.isCompleted;
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -334,6 +348,12 @@ const router = (fastify, { }, next) => {
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
+      if (isCompleted === 'N') {
+        await queueModel.markInterview(db, queueId);
+      } else {
+        await queueModel.markCompleted(db, queueId);
+      }
+
       const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
       // Send notify to H4U Server
       // 

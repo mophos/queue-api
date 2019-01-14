@@ -7,8 +7,10 @@ import * as Random from 'random-js';
 import * as crypto from 'crypto';
 
 import { UserModel } from '../models/user';
+import { UserServicePointsModel } from '../models/user_service_point';
 
 const userModel = new UserModel();
+const userServicePointModel = new UserServicePointsModel();
 
 const router = (fastify, { }, next) => {
 
@@ -103,6 +105,42 @@ const router = (fastify, { }, next) => {
     try {
       await userModel.remove(db, userId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
+  fastify.put('/service-points/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const userId: any = req.params.userId;
+    const items = req.body.items;
+
+    var data: any = [];
+    items.forEach((v: any) => {
+      var obj: any = {};
+      obj.user_id = userId;
+      obj.service_point_id = v;
+
+      data.push(obj);
+    });
+
+    try {
+      await userServicePointModel.remove(db, userId);
+      await userServicePointModel.save(db, data);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
+
+  fastify.get('/service-points/list/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const userId: any = req.params.userId;
+
+    try {
+      const rs: any = await userServicePointModel.list(db, userId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })

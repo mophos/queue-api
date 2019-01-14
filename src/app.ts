@@ -156,8 +156,8 @@ app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
   reply.code(200).send({ message: 'Welcome to Q4U API services!' })
 });
 
-const port = +process.env.HTTP_PORT || 3002;
-const host = process.env.HTTP_ADDRESS || '0.0.0.0';
+const port = 3002;
+const host = '0.0.0.0';
 
 app.listen(port, host, (err) => {
   if (err) throw err;
