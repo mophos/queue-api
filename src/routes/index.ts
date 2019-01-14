@@ -20,6 +20,7 @@ const router = (fastify, { }, next) => {
       const rs: any = await systemModel.getInfo(db);
       reply.code(HttpStatus.OK).send({ info: rs[0] })
     } catch (error) {
+      console.log(error);
       reply.code(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
   });
