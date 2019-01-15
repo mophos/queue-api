@@ -42,7 +42,8 @@ app.register(require('fastify-jwt'), {
 app.register(require('point-of-view'), {
   engine: {
     ejs: require('ejs')
-  }
+  },
+  templates: 'templates',
 });
 
 app.register(require('fastify-ws'), {});

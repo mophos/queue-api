@@ -48,10 +48,10 @@ const router = (fastify, { }, next) => {
           const localCode: any = info.local_code;
           const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);
 
-          var templateDir = path.join(__dirname, '../templates/queue-qrcode.ejs');
-          console.log(templateDir);
+          // var templateDir = path.join(__dirname, '../templates/queue-qrcode.ejs');
+          // console.log(templateDir);
 
-          reply.view(templateDir, {
+          reply.view('queue-qrcode.ejs', {
             qrcode: qrcode,
             hosname: hosname,
             queueNumber: queueNumber,
