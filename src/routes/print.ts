@@ -2,7 +2,7 @@
 
 import * as knex from 'knex';
 import * as fastify from 'fastify';
-
+import * as path from 'path';
 import * as moment from 'moment';
 
 import * as HttpStatus from 'http-status-codes';
@@ -48,7 +48,10 @@ const router = (fastify, { }, next) => {
           const localCode: any = info.local_code;
           const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);
 
-          reply.view('./templates/queue-qrcode.ejs', {
+          var templateDir = path.join(__dirname, '../templates/queue-qrcode.ejs');
+          console.log(templateDir);
+
+          reply.view(templateDir, {
             qrcode: qrcode,
             hosname: hosname,
             queueNumber: queueNumber,
