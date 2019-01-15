@@ -39,12 +39,15 @@ app.register(require('fastify-jwt'), {
   secret: process.env.SECRET_KEY
 });
 
+var templateDir = path.join(__dirname, '../templates');
 app.register(require('point-of-view'), {
   engine: {
     ejs: require('ejs')
   },
-  templates: 'templates',
+  templates: templateDir
 });
+
+
 
 app.register(require('fastify-ws'), {});
 
