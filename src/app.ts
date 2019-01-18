@@ -123,7 +123,7 @@ app.register(require('./plugins/db'), {
 
 // MQTT
 app.register(require('./plugins/mqtt'), {
-  host: process.env.LOCAL_NOTIFY_SERVER,
+  host: process.env.INTERNAL_NOTIFY_SERVER,
   username: process.env.LOCAL_NOTIFY_USER,
   password: process.env.LOCAL_NOTIFY_PASSWORD
 });
