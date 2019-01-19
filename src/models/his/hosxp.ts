@@ -8,7 +8,6 @@ export class HosxpModel {
         'o.cur_dep as clinic_code', 'c.name as clinic_name',
         'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
         'pt.birthday as birthdate', 'pt.sex as sex', 'o.oqueue as his_queue')
-      .innerJoin('spclty as c', 'c.spclty', 'o.spclty')
       .innerJoin('patient as pt', 'pt.hn', 'o.hn')
       .where('o.vstdate', dateServ)
       .whereIn('o.cur_dep', localCode)
@@ -46,16 +45,14 @@ export class HosxpModel {
   getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any) {
     var sql = db('ovst as o')
       .select(db.raw('count(*) as total'))
-      .innerJoin('spclty as c', 'c.spclty', 'o.spclty')
       .innerJoin('patient as pt', 'pt.hn', 'o.hn')
       .where('o.vstdate', dateServ)
-      .whereIn('o.spclty', localCode)
+      .whereIn('o.cur_dep', localCode)
       .whereNotIn('o.vn', vn);
 
     if (servicePointCode) {
-      sql.where('o.spclty', servicePointCode);
+      sql.where('o.cur_dep', servicePointCode);
     }
-
 
     if (query) {
       var _arrQuery = query.split(' ');
