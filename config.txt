@@ -32,7 +32,11 @@ HIS_TYPE=hi
 QUEUE_DIGIT=4
 USE_PRIORITY_PREFIX=N
 
+# for docker container
+INTERNAL_NOTIFY_SERVER=127.0.0.1
+# for web client
 LOCAL_NOTIFY_SERVER=127.0.0.1
+# same user/password for internal and local notify server
 LOCAL_NOTIFY_USER=q4u
 LOCAL_NOTIFY_PASSWORD=##q4u##
 LOCAL_NOTIFY_HTTP_PORT=8080

@@ -39,12 +39,15 @@ app.register(require('fastify-jwt'), {
   secret: process.env.SECRET_KEY
 });
 
+var templateDir = path.join(__dirname, '../templates');
 app.register(require('point-of-view'), {
   engine: {
     ejs: require('ejs')
   },
-  templates: 'templates',
+  templates: templateDir
 });
+
+
 
 app.register(require('fastify-ws'), {});
 
@@ -120,7 +123,7 @@ app.register(require('./plugins/db'), {
 
 // MQTT
 app.register(require('./plugins/mqtt'), {
-  host: process.env.LOCAL_NOTIFY_SERVER,
+  host: process.env.INTERNAL_NOTIFY_SERVER,
   username: process.env.LOCAL_NOTIFY_USER,
   password: process.env.LOCAL_NOTIFY_PASSWORD
 });
@@ -151,6 +154,7 @@ app.register(require('./routes/service_points'), { prefix: '/v1/service-points',
 app.register(require('./routes/service_rooms'), { prefix: '/v1/service-rooms', logger: true });
 app.register(require('./routes/priorities'), { prefix: '/v1/priorities', logger: true });
 app.register(require('./routes/queue'), { prefix: '/v1/queue', logger: true });
+app.register(require('./routes/departments'), { prefix: '/v1/departments', logger: true });
 app.register(require('./routes/print'), { prefix: '/v1/print', logger: true });
 
 app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {

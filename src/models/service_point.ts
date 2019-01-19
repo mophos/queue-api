@@ -5,7 +5,10 @@ export class ServicePointModel {
   tableName = 'q4u_service_points';
 
   list(db: knex) {
-    return db(this.tableName).orderBy('service_point_name');
+    return db('q4u_service_points as sp')
+      .select('sp.*', 'd.department_name')
+      .leftJoin('q4u_departments as d', 'd.department_id', 'sp.department_id')
+      .orderBy('sp.service_point_name');
   }
 
   getServicePointIdFromLocalCode(db: knex, localCode: any) {
