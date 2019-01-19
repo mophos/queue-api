@@ -154,6 +154,7 @@ app.register(require('./routes/service_points'), { prefix: '/v1/service-points',
 app.register(require('./routes/service_rooms'), { prefix: '/v1/service-rooms', logger: true });
 app.register(require('./routes/priorities'), { prefix: '/v1/priorities', logger: true });
 app.register(require('./routes/queue'), { prefix: '/v1/queue', logger: true });
+app.register(require('./routes/departments'), { prefix: '/v1/departments', logger: true });
 app.register(require('./routes/print'), { prefix: '/v1/print', logger: true });
 
 app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {

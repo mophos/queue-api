@@ -3,9 +3,9 @@
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
-import { PriorityModel } from '../models/priority';
+import { DepartmentModel } from '../models/department';
 
-const priorityModel = new PriorityModel();
+const departmentModel = new DepartmentModel();
 
 const router = (fastify, { }, next) => {
 
@@ -14,7 +14,7 @@ const router = (fastify, { }, next) => {
   fastify.get('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
-      const rs: any = await priorityModel.list(db);
+      const rs: any = await departmentModel.list(db);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
     } catch (error) {
       fastify.log.error(error);
@@ -24,18 +24,14 @@ const router = (fastify, { }, next) => {
   })
 
   fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const priorityName = req.body.priorityName;
-    const priorityPrefix = req.body.priorityPrefix;
-    // const priorityColor = req.body.priorityColor;
+    const departmentName = req.body.departmentName;
 
     const data: any = {
-      priority_name: priorityName,
-      priority_prefix: priorityPrefix,
-      // priority_color: priorityColor
+      department_name: departmentName,
     };
 
     try {
-      await priorityModel.save(db, data);
+      await departmentModel.save(db, data);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
     } catch (error) {
       fastify.log.error(error);
@@ -44,20 +40,16 @@ const router = (fastify, { }, next) => {
 
   })
 
-  fastify.put('/:priorityId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const priorityId: any = req.params.priorityId;
-    const priorityName = req.body.priorityName;
-    const priorityPrefix = req.body.priorityPrefix;
-    // const priorityColor = req.body.priorityColor;
+  fastify.put('/:departmentId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const departmentId: any = req.params.departmentId;
+    const departmentName = req.body.departmentName;
 
     const data: any = {
-      priority_name: priorityName,
-      priority_prefix: priorityPrefix,
-      // priority_color: priorityColor
+      department_name: departmentName,
     };
 
     try {
-      await priorityModel.update(db, priorityId, data);
+      await departmentModel.update(db, departmentId, data);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
     } catch (error) {
       fastify.log.error(error);
@@ -66,11 +58,11 @@ const router = (fastify, { }, next) => {
 
   })
 
-  fastify.delete('/:priorityId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const priorityId: any = req.params.priorityId;
+  fastify.delete('/:departmentId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const departmentId: any = req.params.departmentId;
 
     try {
-      await priorityModel.remove(db, priorityId);
+      await departmentModel.remove(db, departmentId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
     } catch (error) {
       fastify.log.error(error);

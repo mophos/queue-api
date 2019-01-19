@@ -30,6 +30,8 @@ const router = (fastify, { }, next) => {
     const servicePointName = req.body.servicePointName;
     const localCode = req.body.localCode;
     const servicePointAbbr = req.body.servicePointAbbr;
+    const departmentId = req.body.departmentId;
+    const prefix = req.body.prefix;
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -38,6 +40,8 @@ const router = (fastify, { }, next) => {
       service_point_name: servicePointName,
       local_code: localCode,
       service_point_abbr: servicePointAbbr,
+      department_id: departmentId,
+      prefix: prefix,
       topic: strRnd
     };
 
@@ -56,6 +60,8 @@ const router = (fastify, { }, next) => {
     const servicePointName = req.body.servicePointName;
     const localCode = req.body.localCode;
     const servicePointAbbr = req.body.servicePointAbbr;
+    const departmentId = req.body.departmentId;
+    const prefix = req.body.prefix;
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -64,6 +70,8 @@ const router = (fastify, { }, next) => {
       service_point_name: servicePointName,
       local_code: localCode,
       service_point_abbr: servicePointAbbr,
+      department_id: departmentId,
+      prefix: prefix,
       topic: strRnd
     };
 
