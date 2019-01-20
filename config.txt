@@ -26,7 +26,7 @@ Q4U_NOTIFY_URL=http://mqtt.h4u.moph.go.th/v1/queue/update
 
 ###############################################################
 
-# HIS_TYPE เช่น hi, hosxp
+# HIS_TYPE เช่น hi, hosxp, homec, himpro, mbase, ezhosp
 HIS_TYPE=hi
 
 QUEUE_DIGIT=4
