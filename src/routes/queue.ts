@@ -11,6 +11,7 @@ import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
 import { MbaseModel } from '../models/his/mbase';
 import { HomcModel } from '../models/his/homc';
+import { HimproModel } from '../models/his/himpro';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
@@ -19,8 +20,8 @@ const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
 const hisType = process.env.HIS_TYPE || 'hosxp';
 
-// var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
 // ห้ามแก้ไข // 
+
 var hisModel: any;
 switch (hisType) {
   case 'ezhosp':
@@ -38,8 +39,11 @@ switch (hisType) {
   case 'mbase':
     hisModel = new MbaseModel();
     break;
+  case 'himpro':
+    hisModel = new HimproModel();
+    break;
   default:
-  // hisModel = new HisModel();
+    hisModel = new HosxpModel();
 }
 
 const router = (fastify, { }, next) => {
