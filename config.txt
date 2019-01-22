@@ -22,11 +22,10 @@ ENABLE_Q4U=Y
 Q4U_NOTIFY_TOPIC=3YXTZNG2M3WNY89IONE1
 Q4U_NOTIFY_TOKEN=5XLRBYWWK3I9BE33IBFU
 Q4U_NOTIFY_URL=http://mqtt.h4u.moph.go.th/v1/queue/update
-# Q4U_NOTIFY_URL=http://localhost:3004/v1/queue/update
 
 ###############################################################
 
-# HIS_TYPE เช่น hi, hosxp, homec, himpro, mbase, ezhosp
+# HIS_TYPE เช่น hi, hosxp, homec, universal, mbase, ezhosp
 HIS_TYPE=hi
 
 QUEUE_DIGIT=4
@@ -43,6 +42,3 @@ LOCAL_NOTIFY_HTTP_PORT=8080
 
 QUEUE_CENTER_TOPIC=queue/center
 SERVICE_POINT_TOPIC=queue/service-point
-
-HTTP_PORT=3002
-HTTP_ADDRESS=0.0.0.0
