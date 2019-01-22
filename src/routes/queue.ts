@@ -9,18 +9,19 @@ import { QueueModel } from '../models/queue';
 import { EzhospModel } from '../models/his/ezhosp';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
-import { MbaseModel } from '../models/his/mbase';
+import { UniversalModel } from '../models/his/universal';
 import { HomcModel } from '../models/his/homc';
+// import { HimproModel } from '../models/his/himpro';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
 
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
-const hisType = process.env.HIS_TYPE || 'hosxp';
+const hisType = process.env.HIS_TYPE || 'universal';
 
-// var hisModel = process.env.HIS_TYPE === 'hi' ? new HiModel : new HosxpModel(); // other model here.
 // ห้ามแก้ไข // 
+
 var hisModel: any;
 switch (hisType) {
   case 'ezhosp':
@@ -35,11 +36,11 @@ switch (hisType) {
   case 'homc':
     hisModel = new HomcModel();
     break;
-  case 'mbase':
-    hisModel = new MbaseModel();
+  case 'universal':
+    hisModel = new UniversalModel();
     break;
   default:
-  // hisModel = new HisModel();
+    hisModel = new HosxpModel();
 }
 
 const router = (fastify, { }, next) => {
@@ -59,6 +60,16 @@ const router = (fastify, { }, next) => {
       return padString.slice(0, targetLength) + str;
     }
   };
+
+  fastify.get('/test', async (req: fastify.Request, reply: fastify.Reply) => {
+    try {
+      const rs: any = await hisModel.testConnection(dbHIS);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs[0][0] })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+    }
+  })
 
   fastify.get('/his-visit', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -365,7 +376,7 @@ const router = (fastify, { }, next) => {
           console.log(process.env.Q4U_NOTIFY_URL);
 
           // queue without prefix
-          const prefixLength = 2;
+          const prefixLength = process.env.USE_PRIORITY_PREFIX === 'Y' ? 2 : 1;
           const digiLength = +process.env.QUEUE_DIGIT || 3;
           const totalLength = prefixLength + digiLength;
 
@@ -381,8 +392,6 @@ const router = (fastify, { }, next) => {
             roomName: data.room_name,
             dateServ: moment(data.date_serv).format('YYYYMMDD'),
           };
-
-          console.log(params);
 
           request.post(process.env.Q4U_NOTIFY_URL, {
             form: params

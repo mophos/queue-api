@@ -1,24 +1,20 @@
 import * as knex from 'knex';
 
-export class HiModel {
+export class UniversalModel {
 
   testConnection(db: knex) {
     return db.raw(`select 'Q4U Work'`);
   }
 
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
-    var sql = db('ovst as o')
-      .select('o.vn', 'o.hn', db.raw('date(vstdttm) as date_serv'), db.raw('time(vstdttm) as time_serv'),
-        'o.cln as clinic_code', 'c.namecln as clinic_name', 'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
-        'pt.brthdate as birthdate', 'pt.male as sex', db.raw('"" as his_queue'))
-      .innerJoin('cln as c', 'c.cln', 'o.cln')
-      .innerJoin('pt', 'pt.hn', 'o.hn')
-      .whereRaw('date(vstdttm)=?', [dateServ])
-      .whereIn('o.cln', localCode)
-      .whereNotIn('o.vn', vn);
+    var sql = db('q4u')
+      .select('*')
+      .where('date_serv', dateServ)
+      .whereIn('clinic_code', localCode)
+      .whereNotIn('vn', vn);
 
     if (servicePointCode) {
-      sql.where('o.cln', servicePointCode);
+      sql.where('clinic_code', servicePointCode);
     }
 
     if (query) {
@@ -32,9 +28,9 @@ export class HiModel {
       }
 
       sql.where(w => {
-        var _where = w.where('o.hn', query);
+        var _where = w.where('hn', query);
         if (firstName && lastName) {
-          _where.orWhere(x => x.where('pt.fname', 'like', firstName).where('pt.lname', 'like', lastName))
+          _where.orWhere(x => x.where('first_name', 'like', firstName).where('last_name', 'like', lastName))
         }
         return _where;
       });
@@ -43,19 +39,16 @@ export class HiModel {
 
     return sql.limit(limit)
       .offset(offset)
-      .orderBy('o.vstdttm', 'asc');
+      .orderBy('time_serv', 'asc');
 
   }
 
   getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any) {
-    var sql = db('ovst as o')
+    var sql = db('q4u')
       .select(db.raw('count(*) as total'))
-      .innerJoin('pt', 'pt.hn', 'o.hn')
-      .innerJoin('cln as c', 'c.cln', 'o.cln')
-      .whereRaw('date(o.vstdttm)=?', [dateServ])
-      .whereIn('o.cln', localCode)
-      .whereNotIn('o.vn', vn);
-
+      .where('date_serv', dateServ)
+      .whereIn('clinic_code', localCode)
+      .whereNotIn('vn', vn);
 
     if (query) {
       var _arrQuery = query.split(' ');
@@ -68,9 +61,9 @@ export class HiModel {
       }
 
       sql.where(w => {
-        var _where = w.where('o.hn', query);
+        var _where = w.where('hn', query);
         if (firstName && lastName) {
-          _where.orWhere(x => x.where('pt.fname', 'like', firstName).where('pt.lname', 'like', lastName))
+          _where.orWhere(x => x.where('first_name', 'like', firstName).where('last_name', 'like', lastName))
         }
         return _where;
       });
@@ -78,7 +71,7 @@ export class HiModel {
     }
 
     if (servicePointCode) {
-      sql.where('o.cln', servicePointCode);
+      sql.where('clinic_code', servicePointCode);
     }
 
     return sql;
