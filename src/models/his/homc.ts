@@ -2,6 +2,10 @@ import * as knex from 'knex';
 
 export class HomcModel {
 
+    testConnection(db: knex) {
+        return db.raw(`select 'Q4U Work'`);
+    }
+
     getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
         var sql = db('OPD_H as o')
             .select('o.regNo as vn', 'o.hn',

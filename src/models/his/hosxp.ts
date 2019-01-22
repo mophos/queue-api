@@ -2,6 +2,10 @@ import * as knex from 'knex';
 
 export class HosxpModel {
 
+  testConnection(db: knex) {
+    return db.raw(`select 'Q4U Work'`);
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('ovst as o')
       .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),
