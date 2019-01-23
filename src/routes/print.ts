@@ -30,12 +30,7 @@ const router = (fastify, { }, next) => {
           const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
 
-          // queue without prefix
-          const prefixLength = process.env.USE_PRIORITY_PREFIX === 'Y' ? 2 : 1;
-          const digiLength = +process.env.QUEUE_DIGIT || 3;
-          const totalLength = prefixLength + digiLength;
-
-          const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+          const queueWithoutPrefix = +info.queue_running;
 
           const servicePointName: any = info.service_point_name;
           const remainQueue: any = info.remain_queue || 0;
@@ -93,12 +88,7 @@ const router = (fastify, { }, next) => {
           const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
 
-          // queue without prefix
-          const prefixLength = process.env.USE_PRIORITY_PREFIX === 'Y' ? 2 : 1;
-          const digiLength = +process.env.QUEUE_DIGIT || 3;
-          const totalLength = prefixLength + digiLength;
-
-          const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+          const queueWithoutPrefix = +info.queue_running;
 
           const servicePointName: any = info.service_point_name;
           const remainQueue: any = info.remain_queue || 0;

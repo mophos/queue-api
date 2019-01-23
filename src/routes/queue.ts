@@ -147,15 +147,16 @@ const router = (fastify, { }, next) => {
               await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
             }
 
+            const _queueRunning = queueNumber;
+
             const queueDigit = +process.env.QUEUE_DIGIT || 3;
             const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
-
             var strQueueNumber: string = null;
 
             if (process.env.USE_PRIORITY_PREFIX === 'Y') {
-              strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+              strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
             } else {
-              strQueueNumber = `${prefixPoint}${_queueNumber}`;
+              strQueueNumber = `${prefixPoint} ${_queueNumber}`;
             }
             const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -169,6 +170,7 @@ const router = (fastify, { }, next) => {
             qData.priorityId = priorityId;
             qData.dateCreate = dateCreate;
             qData.hisQueue = hisQueue;
+            qData.queueRunning = _queueRunning
 
             const queueId: any = await queueModel.createQueueInfo(db, qData);
 
@@ -306,6 +308,8 @@ const router = (fastify, { }, next) => {
           await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
         }
 
+        const _queueRunning = queueNumber;
+
         const queueDigit = +process.env.QUEUE_DIGIT || 3;
         const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
@@ -327,6 +331,7 @@ const router = (fastify, { }, next) => {
         qData.priorityId = priorityId;
         qData.dateCreate = dateCreate;
         qData.hisQueue = hisQueue;
+        qData.queueRunning = _queueRunning;
 
         newQueueId = await queueModel.createQueueInfo(db, qData);
 
@@ -373,14 +378,7 @@ const router = (fastify, { }, next) => {
         // console.log(rsQueue[0]);
         if (rsQueue[0].length) {
           const data = rsQueue[0][0];
-          console.log(process.env.Q4U_NOTIFY_URL);
-
-          // queue without prefix
-          const prefixLength = process.env.USE_PRIORITY_PREFIX === 'Y' ? 2 : 1;
-          const digiLength = +process.env.QUEUE_DIGIT || 3;
-          const totalLength = prefixLength + digiLength;
-
-          const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+          const queueWithoutPrefix = +data.queue_running;
 
           const params = {
             hosid: data.hosid,
@@ -440,7 +438,8 @@ const router = (fastify, { }, next) => {
     try {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
-      await queueModel.changeCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+      await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
