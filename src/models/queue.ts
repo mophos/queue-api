@@ -63,6 +63,7 @@ export class QueueModel {
         date_serv: qData.dateServ,
         time_serv: qData.timeServ,
         queue_number: qData.queueNumber,
+        queue_running: qData.queueRunning,
         his_queue: qData.hisQueue,
         priority_id: qData.priorityId,
         date_create: qData.dateCreate
@@ -182,13 +183,13 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueId]);
   }
 
-  changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
-    return db('q4u_queue_detail')
-      .where('service_point_id', servicePointId)
-      .where('date_serv', dateServ)
-      .where('queue_id', queueId)
-      .update('room_id', roomId);
-  }
+  // changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
+  //   return db('q4u_queue_detail')
+  //     .where('service_point_id', servicePointId)
+  //     .where('date_serv', dateServ)
+  //     .where('queue_id', queueId)
+  //     .update('room_id', roomId);
+  // }
 
   removeCurrentQueue(db: knex, servicePointId, dateServ, queueId) {
     return db('q4u_queue_detail')
@@ -250,7 +251,7 @@ export class QueueModel {
 
   getPrintInfo(db: knex, queueId: any) {
     const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.date_serv, q.time_serv,
+    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_running, q.date_serv, q.time_serv,
     sp.service_point_name, sp.local_code, q.date_create,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
@@ -268,7 +269,7 @@ export class QueueModel {
 
   getResponseQueueInfo(db: knex, queueId: any) {
     const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.date_serv,
+    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_running, q.date_serv,
     sp.service_point_name, sp.local_code as service_point_code, q.date_create,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
