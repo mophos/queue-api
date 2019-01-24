@@ -71,6 +71,49 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.post('/patient/info', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    var cid = req.body.cid;
+
+    if (cid) {
+      try {
+        const rs: any = await hisModel.getPatientInfo(dbHIS, cid);
+        if (rs.length) {
+          var data = rs[0];
+          var hn = data.hn;
+          var firstName = data.first_name;
+          var lastName = data.last_name;
+          var birthDate = data.birthdate;
+          var title = data.title;
+          var sex = data.sex;
+
+          var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
+          var patient = {
+            hn: hn,
+            firstName: firstName,
+            lastName: lastName,
+            birthDate: thDate,
+            engBirthDate: moment(birthDate).format('YYYY-MM-DD'),
+            title: title,
+            sex: sex
+          };
+
+          console.log(patient);
+
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
+
+        } else {
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.NOT_FOUND, message: 'ไม่พบข้อมูล' });
+        }
+      } catch (error) {
+        fastify.log.error(error);
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+      }
+    } else {
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' })
+    }
+
+  })
+
   fastify.get('/his-visit', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const limit = +req.query.limit;
@@ -121,7 +164,7 @@ const router = (fastify, { }, next) => {
       try {
         // get service point id from mapping
         const rsLocalCode: any = await servicePointModel.getServicePointIdFromLocalCode(db, localCode);
-        const servicePointId = rsLocalCode[0].service_point_id;
+        const servicePointId = rsLocalCode.length ? rsLocalCode[0].service_point_id : null;
 
         if (servicePointId) {
 
@@ -174,10 +217,10 @@ const router = (fastify, { }, next) => {
 
             const queueId: any = await queueModel.createQueueInfo(db, qData);
 
-            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
-
             const topic = process.env.QUEUE_CENTER_TOPIC;
             fastify.mqttClient.publish(topic, 'update visit');
+
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
           }
 
@@ -337,10 +380,10 @@ const router = (fastify, { }, next) => {
 
       }
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
-
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
       fastify.mqttClient.publish(servicePointTopic, 'update visit');
+
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
     } catch (error) {
       fastify.log.error(error);
@@ -402,13 +445,10 @@ const router = (fastify, { }, next) => {
 
       }
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
-
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
 
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
-      fastify.mqttClient.publish(globalTopic, 'update visit');
 
       const payload = {
         queueNumber: queueNumber,
@@ -416,7 +456,10 @@ const router = (fastify, { }, next) => {
         servicePointId: servicePointId
       }
 
+      fastify.mqttClient.publish(globalTopic, 'update visit');
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
     } catch (error) {
       fastify.log.error(error);
@@ -440,8 +483,6 @@ const router = (fastify, { }, next) => {
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
-
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
 
       const payload = {
@@ -451,6 +492,8 @@ const router = (fastify, { }, next) => {
       }
 
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 
     } catch (error) {
       fastify.log.error(error);

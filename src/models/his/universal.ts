@@ -6,6 +6,12 @@ export class UniversalModel {
     return db.raw(`select 'Q4U Work'`);
   }
 
+  getPatientInfo(db: knex, cid: any) {
+    return db('q4u_patient')
+      .select('hn', 'first_name', 'title', 'sex', 'last_name', 'birthdate')
+      .where('cid', cid).limit(1);
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('q4u')
       .select('*')
