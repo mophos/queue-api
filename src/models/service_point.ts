@@ -11,6 +11,14 @@ export class ServicePointModel {
       .orderBy('sp.service_point_name');
   }
 
+  listKios(db: knex) {
+    return db('q4u_service_points as sp')
+      .select('sp.*', 'd.department_name')
+      .leftJoin('q4u_departments as d', 'd.department_id', 'sp.department_id')
+      .where('sp.kios', 'Y')
+      .orderBy('sp.service_point_name');
+  }
+
   getServicePointIdFromLocalCode(db: knex, localCode: any) {
     return db(this.tableName).select('service_point_id').where('local_code', localCode).limit(1);
   }

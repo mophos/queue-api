@@ -83,10 +83,11 @@ const router = (fastify, { }, next) => {
                 await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
               }
 
+              const _queueRunning = queueNumber;
               const queueDigit = +process.env.QUEUE_DIGIT || 3;
               const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-              const strQueueNumber: string = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+              const strQueueNumber: string = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
               const qData: any = {};
@@ -99,6 +100,7 @@ const router = (fastify, { }, next) => {
               qData.priorityId = priorityId;
               qData.dateCreate = dateCreate;
               qData.hisQueue = hisQueue;
+              qData.queueRunning = _queueRunning;
 
               var rsQueue: any = await queueModel.createQueueInfo(db, qData);
               var queueId = rsQueue[0];
@@ -111,12 +113,7 @@ const router = (fastify, { }, next) => {
                 const hosid: any = info.hosid;
                 const queueNumber: any = info.queue_number;
 
-                // queue without prefix
-                const prefixLength = 2;
-                const digiLength = +process.env.QUEUE_DIGIT || 3;
-                const totalLength = prefixLength + digiLength;
-
-                const queueWithoutPrefix = +queueNumber.substring(prefixLength, totalLength);
+                const queueWithoutPrefix = +info.queue_running;
 
                 const servicePointName: any = info.service_point_name;
                 // const remainQueue: any = info.remain_queue || 0;

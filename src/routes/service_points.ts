@@ -25,6 +25,17 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.get('/kios', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    try {
+      const rs: any = await servicePointModel.listKios(db);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
   // save new service point
   fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointName = req.body.servicePointName;
@@ -32,6 +43,7 @@ const router = (fastify, { }, next) => {
     const servicePointAbbr = req.body.servicePointAbbr;
     const departmentId = req.body.departmentId;
     const prefix = req.body.prefix;
+    const kios = req.body.kios;
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -42,7 +54,8 @@ const router = (fastify, { }, next) => {
       service_point_abbr: servicePointAbbr,
       department_id: departmentId,
       prefix: prefix,
-      topic: strRnd
+      topic: strRnd,
+      kios: kios
     };
 
     try {
@@ -62,6 +75,7 @@ const router = (fastify, { }, next) => {
     const servicePointAbbr = req.body.servicePointAbbr;
     const departmentId = req.body.departmentId;
     const prefix = req.body.prefix;
+    const kios = req.body.kios;
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -72,7 +86,8 @@ const router = (fastify, { }, next) => {
       service_point_abbr: servicePointAbbr,
       department_id: departmentId,
       prefix: prefix,
-      topic: strRnd
+      topic: strRnd,
+      kios: kios
     };
 
     try {
