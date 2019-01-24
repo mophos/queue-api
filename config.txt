@@ -17,7 +17,7 @@ MAX_CONNECTION_PER_MINUTE=50000
 ################### Queue Service for H4U #####################
 # Enable Q4U
 # N = disabled, Y = enable
-ENABLE_Q4U=Y
+ENABLE_Q4U=N
 
 Q4U_NOTIFY_TOPIC=3YXTZNG2M3WNY89IONE1
 Q4U_NOTIFY_TOKEN=5XLRBYWWK3I9BE33IBFU
@@ -38,7 +38,7 @@ LOCAL_NOTIFY_SERVER=127.0.0.1
 # same user/password for internal and local notify server
 LOCAL_NOTIFY_USER=q4u
 LOCAL_NOTIFY_PASSWORD=##q4u##
-LOCAL_NOTIFY_HTTP_PORT=8080
+LOCAL_NOTIFY_HTTP_PORT=8888
 
 QUEUE_CENTER_TOPIC=queue/center
 SERVICE_POINT_TOPIC=queue/service-point
