@@ -73,8 +73,12 @@ const router = (fastify, { }, next) => {
             } else {
               await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
               var queueNumber = 0;
-              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              var queueInterview = 0;
 
+              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+
+              // queue number
               if (rs1.length) {
                 queueNumber = rs1[0]['current_queue'] + 1;
                 await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
@@ -83,9 +87,26 @@ const router = (fastify, { }, next) => {
                 await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
               }
 
+              // queue interview
+              if (rs2.length) {
+                queueInterview = rs2[0]['current_queue'] + 1;
+                await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
+              } else {
+                queueInterview = 1;
+                await queueModel.createServicePointQueueNumber(db, 999, dateServ);
+              }
+
               const _queueRunning = queueNumber;
               const queueDigit = +process.env.QUEUE_DIGIT || 3;
-              const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+              // const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+
+              var _queueNumber = null;
+
+              if (process.env.ZERO_PADDING === 'Y') {
+                _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+              } else {
+                _queueNumber = queueNumber.toString();
+              }
 
               const strQueueNumber: string = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -101,6 +122,7 @@ const router = (fastify, { }, next) => {
               qData.dateCreate = dateCreate;
               qData.hisQueue = hisQueue;
               qData.queueRunning = _queueRunning;
+              qData.queueInterview = queueInterview;
 
               var rsQueue: any = await queueModel.createQueueInfo(db, qData);
               var queueId = rsQueue[0];

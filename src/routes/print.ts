@@ -29,6 +29,7 @@ const router = (fastify, { }, next) => {
           const hosname: any = info.hosname;
           const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
+          const queueInterview: any = info.queue_interview;
 
           const queueWithoutPrefix = +info.queue_running;
 
@@ -56,7 +57,8 @@ const router = (fastify, { }, next) => {
             servicePointName: servicePointName,
             remainQueue: remainQueue,
             priorityName: priorityName,
-            queueId: queueId
+            queueId: queueId,
+            queueInterview: queueInterview
           });
 
         } else {
@@ -94,6 +96,7 @@ const router = (fastify, { }, next) => {
           const remainQueue: any = info.remain_queue || 0;
           const hn: any = info.hn;
           const vn: any = info.vn;
+          const queueInterview = info.queue_interview;
           const priorityName: any = info.priority_name;
           const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
           const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
@@ -107,7 +110,8 @@ const router = (fastify, { }, next) => {
             "queueNumber": queueNumber,
             "servicePointName": servicePointName,
             "remainQueue": remainQueue,
-            "priorityName": priorityName
+            "priorityName": priorityName,
+            "queueInterview": queueInterview
           };
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });

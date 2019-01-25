@@ -66,7 +66,8 @@ export class QueueModel {
         queue_running: qData.queueRunning,
         his_queue: qData.hisQueue,
         priority_id: qData.priorityId,
-        date_create: qData.dateCreate
+        date_create: qData.dateCreate,
+        queue_interview: qData.queueInterview
       }, 'queue_id');
   }
 
@@ -80,7 +81,7 @@ export class QueueModel {
 
   getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
     return db('q4u_queue as q')
-      .select('q.queue_id', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
+      .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -108,7 +109,7 @@ export class QueueModel {
 
   getWorking(db: knex, dateServ: any, servicePointId: any) {
     return db('q4u_queue_detail as qd')
-      .select('qd.service_point_id', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
+      .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
@@ -127,7 +128,7 @@ export class QueueModel {
   getWorkingHistory(db: knex, dateServ: any, servicePointId: any) {
     return db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
-        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
@@ -146,7 +147,7 @@ export class QueueModel {
   getPending(db: knex, dateServ: any, servicePointId: any) {
     return db('q4u_queue_detail as qd')
       .select('qd.service_point_id', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
-        'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
@@ -251,7 +252,7 @@ export class QueueModel {
 
   getPrintInfo(db: knex, queueId: any) {
     const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_running, q.date_serv, q.time_serv,
+    select q.hn, q.vn, q.queue_id, q.queue_interview, q.queue_number, q.queue_running, q.date_serv, q.time_serv,
     sp.service_point_name, sp.local_code, q.date_create,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
@@ -269,7 +270,7 @@ export class QueueModel {
 
   getResponseQueueInfo(db: knex, queueId: any) {
     const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_running, q.date_serv,
+    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_interview, q.queue_running, q.date_serv,
     sp.service_point_name, sp.local_code as service_point_code, q.date_create,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
