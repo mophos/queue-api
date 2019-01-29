@@ -375,12 +375,20 @@ const router = (fastify, { }, next) => {
         const _queueRunning = queueNumber;
 
         const queueDigit = +process.env.QUEUE_DIGIT || 3;
-        const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+        // const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+
+        var _queueNumber = null;
+
+        if (process.env.ZERO_PADDING === 'Y') {
+          _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+        } else {
+          _queueNumber = queueNumber.toString();
+        }
 
         if (process.env.USE_PRIORITY_PREFIX === 'Y') {
-          strQueueNumber = `${prefixPoint}${prefixPriority}${_queueNumber}`;
+          strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
         } else {
-          strQueueNumber = `${prefixPoint}${_queueNumber}`;
+          strQueueNumber = `${prefixPoint} ${_queueNumber}`;
         }
 
         const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
