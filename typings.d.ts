@@ -15,7 +15,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     db: knex;
     dbHIS: knex;
-    ws: any;
+    // ws: any;
   }
 }
 

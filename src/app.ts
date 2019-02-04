@@ -48,9 +48,6 @@ app.register(require('point-of-view'), {
 });
 
 
-
-app.register(require('fastify-ws'), {});
-
 app.decorate("authenticate", async (request, reply) => {
   let token: string = null;
 
@@ -166,18 +163,5 @@ const host = '0.0.0.0';
 
 app.listen(port, host, (err) => {
   if (err) throw err;
-
-  app.ws
-    .on('connection', socket => {
-      console.log('Client connected.')
-      socket.on('message', msg => socket.send(msg))
-      socket.on('close', () => console.log('Client disconnected.'))
-    })
-
-  app.ws.on('error', error => {
-    console.log(error)
-    console.log('WebSocket server error!')
-  });
-
   console.log(app.server.address());
 });
