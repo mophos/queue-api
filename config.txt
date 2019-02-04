@@ -10,9 +10,12 @@ DBHIS_NAME=hi
 DBHIS_USER=root
 DBHIS_PASSWORD=#######
 
+# เช่น mysql, pg, mssql
+DBHIS_TYPE=mysql
+
 SECRET_KEY=1234567890
 
-MAX_CONNECTION_PER_MINUTE=50000
+MAX_CONNECTION_PER_MINUTE=5000
 
 ################### Queue Service for H4U #####################
 # Enable Q4U

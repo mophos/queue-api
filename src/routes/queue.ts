@@ -64,7 +64,7 @@ const router = (fastify, { }, next) => {
   fastify.get('/test', async (req: fastify.Request, reply: fastify.Reply) => {
     try {
       const rs: any = await hisModel.testConnection(dbHIS);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs[0][0] })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: 'Welcome to Q4U!' })
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })

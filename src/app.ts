@@ -47,7 +47,6 @@ app.register(require('point-of-view'), {
   templates: templateDir
 });
 
-
 app.decorate("authenticate", async (request, reply) => {
   let token: string = null;
 
@@ -94,29 +93,52 @@ app.register(require('./plugins/db'), {
   connectionName: 'db'
 });
 
-app.register(require('./plugins/db'), {
-  connection: {
-    client: 'mysql',
+if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql') {
+
+  app.register(require('./plugins/db'), {
     connection: {
-      host: process.env.DBHIS_HOST,
-      user: process.env.DBHIS_USER,
-      port: +process.env.DBHIS_PORT,
-      password: process.env.DBHIS_PASSWORD,
-      database: process.env.DBHIS_NAME,
+      client: process.env.DBHIS_TYPE,
+      connection: {
+        host: process.env.DBHIS_HOST,
+        user: process.env.DBHIS_USER,
+        port: +process.env.DBHIS_PORT,
+        password: process.env.DBHIS_PASSWORD,
+        database: process.env.DBHIS_NAME,
+      },
+      pool: {
+        min: 0,
+        max: 7
+      },
+      debug: false,
     },
-    pool: {
-      min: 0,
-      max: 7,
-      afterCreate: (conn, done) => {
-        conn.query('SET NAMES utf8', (err) => {
-          done(err, conn);
-        });
-      }
+    connectionName: 'dbHIS'
+  });
+
+} else {
+  app.register(require('./plugins/db'), {
+    connection: {
+      client: process.env.DBHIS_TYPE,
+      connection: {
+        host: process.env.DBHIS_HOST,
+        user: process.env.DBHIS_USER,
+        port: +process.env.DBHIS_PORT,
+        password: process.env.DBHIS_PASSWORD,
+        database: process.env.DBHIS_NAME,
+      },
+      pool: {
+        min: 0,
+        max: 7,
+        afterCreate: (conn, done) => {
+          conn.query('SET NAMES utf8', (err) => {
+            done(err, conn);
+          });
+        }
+      },
+      debug: false,
     },
-    debug: false,
-  },
-  connectionName: 'dbHIS'
-});
+    connectionName: 'dbHIS'
+  });
+}
 
 // MQTT
 app.register(require('./plugins/mqtt'), {
