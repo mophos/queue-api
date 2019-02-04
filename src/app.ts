@@ -117,7 +117,7 @@ if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql') {
 } else {
   app.register(require('./plugins/db'), {
     connection: {
-      client: process.env.DBHIS_TYPE,
+      client: 'mysql',
       connection: {
         host: process.env.DBHIS_HOST,
         user: process.env.DBHIS_USER,
