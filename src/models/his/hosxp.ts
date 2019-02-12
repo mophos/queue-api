@@ -15,17 +15,17 @@ export class HosxpModel {
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('ovst as o')
       .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),
-        'o.cur_dep as clinic_code', 'k.department as clinic_name',
+        'o.main_dep as clinic_code', 'k.department as clinic_name',
         'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
-        'pt.birthday as birthdate', 'pt.sex as sex', 'o.oqueue as his_queue')
+        'pt.birthday as birthdate', 'pt.sex as sex', 'o.main_dep_queue as his_queue')
       .innerJoin('patient as pt', 'pt.hn', 'o.hn')
-      .innerJoin('kskdepartment as k', 'k.depcode', 'o.cur_dep')
+      .innerJoin('kskdepartment as k', 'k.depcode', 'o.main_dep')
       .where('o.vstdate', dateServ)
-      .whereIn('o.cur_dep', localCode)
+      .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
 
     if (servicePointCode) {
-      sql.where('o.cur_dep', servicePointCode);
+      sql.where('o.main_dep', servicePointCode);
     }
 
     if (query) {
@@ -57,13 +57,13 @@ export class HosxpModel {
     var sql = db('ovst as o')
       .select(db.raw('count(*) as total'))
       .innerJoin('patient as pt', 'pt.hn', 'o.hn')
-      .innerJoin('kskdepartment as k', 'k.depcode', 'o.cur_dep')
+      .innerJoin('kskdepartment as k', 'k.depcode', 'o.main_dep')
       .where('o.vstdate', dateServ)
-      .whereIn('o.cur_dep', localCode)
+      .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
 
     if (servicePointCode) {
-      sql.where('o.cur_dep', servicePointCode);
+      sql.where('o.main_dep', servicePointCode);
     }
 
     if (query) {
