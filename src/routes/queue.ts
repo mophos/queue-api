@@ -239,7 +239,10 @@ const router = (fastify, { }, next) => {
             const queueId: any = await queueModel.createQueueInfo(db, qData);
 
             const topic = process.env.QUEUE_CENTER_TOPIC;
+            const topicServicePoint = `${topic}/${servicePointId}`;
+
             fastify.mqttClient.publish(topic, 'update visit');
+            fastify.mqttClient.publish(topicServicePoint, 'update visit');
 
             reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
