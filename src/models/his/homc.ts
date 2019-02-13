@@ -6,7 +6,7 @@ export class HomcModel {
         return db.raw(`select 'Q4U Work'`);
     }
     async getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
-        let data = await db.raw(`select o.regNo as vn, o.hn, convert(date,convert(char,o.registDate -5430000)) as date_serv, 
+        let data = await db.raw(`select top '${limit}' o.regNo as vn, o.hn, convert(date,convert(char,o.registDate -5430000)) as date_serv, 
         substring(o.timePt,1,2)+':'+substring(o.timePt,3,2) as time_serv, 
         d.deptCode as clinic_code, rtrim(d1.deptDesc) as clinic_name, rtrim(t.titleName) as title, 
         rtrim(p.firstName) as first_name, rtrim(p.lastName) as last_name, p.birthDay as birthdate, 
