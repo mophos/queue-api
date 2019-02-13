@@ -5,54 +5,30 @@ export class HomcModel {
     testConnection(db: knex) {
         return db.raw(`select 'Q4U Work'`);
     }
-
-    getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
-        var sql = db('OPD_H as o')
-            .select('o.regNo as vn', 'o.hn',
-                db.raw('dbo.ymd2ce(o.registDate) as date_serv'),
-                db.raw(`'substring(o.timePt,1,2)+':'+substring(o.timePt,3,2) as time_serv'`),
-                'd.deptCode as clinic_code',
-                db.raw('rtrim(d1.deptDesc) as clinic_name'),
-                db.raw('rtrim(t.titleName) as title'),
-                db.raw('rtrim(p.firstName) as first_name'),
-                db.raw('rtrim(p.lastName) as last_name'),
-                db.raw('dbo.ymd2ce(p.birthDay) as birthdate'),
-                db.raw(`case when t.sex='ช' then 'ชาย' else 'หญิง' end as sex`),
-                db.raw('"" as his_queue'))
-            .innerJoin('PATIENT as p', 'p.hn', 'o.hn')
-            .innerJoin('PTITLE as t', 't.titleCode', 'p.titleCode')
-            .innerJoin('Deptq_d as d', 'd.regNo', 'o.regNo' && 'd.hn', 'o.hn')
-            .innerJoin('DEPT as d1', 'd1.deptCode', 'd.deptCode')
-            .whereRaw('dbo.ymd2ce(o.registDate)=?', [dateServ])
-            .whereIn('d.deptCode', localCode)
-            .whereNotIn('o.regNo', vn);
-
-        if (servicePointCode) {
-            sql.where('d.deptCode', servicePointCode);
-        }
-
-        return sql.limit(limit)
-            .offset(offset)
-            .orderBy('dbo.ymd2ce(o.registDate)', 'asc');
-
+    async getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, limit: number = 20, offset: number = 0) {
+        let data = await db.raw(`select top 20 o.regNo as vn, o.hn, convert(date,convert(char,o.registDate -5430000)) as date_serv, 
+        substring(o.timePt,1,2)+':'+substring(o.timePt,3,2) as time_serv, 
+        d.deptCode as clinic_code, rtrim(d1.deptDesc) as clinic_name, rtrim(t.titleName) as title, 
+        rtrim(p.firstName) as first_name, rtrim(p.lastName) as last_name, p.birthDay as birthdate, 
+        case when t.sex='ช' then 'ชาย' else 'หญิง' end as sex, '' as his_queue 
+        from OPD_H as o 
+        inner join PATIENT as p on p.hn = o.hn 
+        inner join PTITLE as t on t.titleCode = p.titleCode 
+        inner join Deptq_d as d on d.hn = o.hn and d.regNo=o.regNo
+        inner join DEPT as d1 on d1.deptCode = d.deptCode 
+        where convert(date,convert(char,o.registDate -5430000))='${dateServ}' and d.deptCode = '${servicePointCode}' order by o.registDate asc`);
+        return data;
     }
 
-    getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
-        var sql = db('OPD_H as o')
-            .select(db.raw('count(*) as total'))
-            .innerJoin('PATIENT as p', 'p.hn', 'o.hn')
-            .innerJoin('PTITLE as t', 't.titleCode', 'p.titleCode')
-            .innerJoin('Deptq_d as d', 'd.regNo', 'o.regNo' && 'd.hn', 'o.hn')
-            .innerJoin('DEPT as d1', 'd1.deptCode', 'd.deptCode')
-            .whereRaw('dbo.ymd2ce(o.registDate)=?', [dateServ])
-            .whereIn('d.deptCode', localCode)
-            .whereNotIn('o.regNo', vn);
-
-        if (servicePointCode) {
-            sql.where('d.deptCode', servicePointCode);
-        }
-
-        return sql.orderBy('dbo.ymd2ce(o.registDate)', 'asc');
+    async getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
+        let data= await db.raw(`select count(*) as total from OPD_H as o 
+        inner join PATIENT as p on p.hn = o.hn 
+        inner join PTITLE as t on t.titleCode = p.titleCode 
+        inner join Deptq_d as d on d.hn = o.hn and d.regNo=o.regNo
+        inner join DEPT as d1 on d1.deptCode = d.deptCode where convert(date,convert(char,o.registDate -5430000))= '${dateServ}' 
+        and d.deptCode = '${servicePointCode}' group by convert(date,convert(char,o.registDate -5430000))`);
+        console.log(servicePointCode);
+        return data;
     }
 
 }
