@@ -90,6 +90,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       // .whereNull('q.room_id')
       .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(limit)
@@ -103,6 +104,7 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ);
     // .whereNull('q.room_id');
   }
@@ -121,6 +123,7 @@ export class QueueModel {
       .where('qd.date_serv', dateServ)
       .where('qd.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
       .orderBy('q.date_update', 'desc');
   }
@@ -139,6 +142,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(10)
       .orderBy('q.date_update', 'desc');
@@ -158,6 +162,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       .groupByRaw('q.service_point_id, q.date_serv, q.queue_number')
       .orderBy('q.queue_id', 'asc');
   }
@@ -235,6 +240,7 @@ export class QueueModel {
       where qx.service_point_id=a.service_point_id 
       and qx.room_id is null
       and qx.date_serv=?
+      and qx.is_cancel != 'Y'
     ) as total
     from (
     select qd1.*
