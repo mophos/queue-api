@@ -174,6 +174,12 @@ export class QueueModel {
       .update({ mark_pending: 'N' });
   }
 
+  markCancel(db: knex, queueId) {
+    return db('q4u_queue')
+      .where('queue_id', queueId)
+      .update({ is_cancel: 'Y' });
+  }
+
   updateCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
     var sql = `
     INSERT INTO q4u_queue_detail(service_point_id, date_serv, queue_id, room_id)
@@ -252,7 +258,7 @@ export class QueueModel {
   getPrintInfo(db: knex, queueId: any) {
     const sql = `
     select q.hn, q.vn, q.queue_id, q.queue_interview, q.queue_number, q.queue_running, q.date_serv, q.time_serv,
-    sp.service_point_name, sp.local_code, q.date_create,
+    sp.service_point_name, sp.local_code, q.date_create, ps.first_name,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
     (
@@ -261,6 +267,7 @@ export class QueueModel {
     ) as remain_queue, p.priority_name
     from q4u_queue as q 
     inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
+    inner join q4u_person as ps on ps.hn=q.hn
     left join q4u_priorities as p on p.priority_id=q.priority_id
     where q.queue_id=?
     `;
