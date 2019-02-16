@@ -90,6 +90,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       // .whereNull('q.room_id')
       .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(limit)
@@ -103,6 +104,7 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ);
     // .whereNull('q.room_id');
   }
@@ -121,8 +123,24 @@ export class QueueModel {
       .where('qd.date_serv', dateServ)
       .where('qd.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
       .orderBy('q.date_update', 'desc');
+  }
+
+  getAllQueueActive(db: knex, dateServ: any) {
+    return db('q4u_queue as q')
+      .select(
+        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.room_id', 'r.room_name', 'r.room_number',
+        'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name', 'p.last_name',
+        'p.birthdate', 'pr.priority_name', 'pr.prority_color', 'sp.service_point_name')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .where('q.date_serv', dateServ)
+      .whereNot('q.is_cancel', 'Y')
+      .orderBy('q.queue_id', 'desc');
   }
 
   getWorkingHistory(db: knex, dateServ: any, servicePointId: any) {
@@ -139,6 +157,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(10)
       .orderBy('q.date_update', 'desc');
@@ -158,6 +177,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
       .groupByRaw('q.service_point_id, q.date_serv, q.queue_number')
       .orderBy('q.queue_id', 'asc');
   }
@@ -172,6 +192,12 @@ export class QueueModel {
     return db('q4u_queue')
       .where('queue_id', queueId)
       .update({ mark_pending: 'N' });
+  }
+
+  markCancel(db: knex, queueId) {
+    return db('q4u_queue')
+      .where('queue_id', queueId)
+      .update({ is_cancel: 'Y' });
   }
 
   updateCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
@@ -229,6 +255,7 @@ export class QueueModel {
       where qx.service_point_id=a.service_point_id 
       and qx.room_id is null
       and qx.date_serv=?
+      and qx.is_cancel != 'Y'
     ) as total
     from (
     select qd1.*
@@ -252,7 +279,7 @@ export class QueueModel {
   getPrintInfo(db: knex, queueId: any) {
     const sql = `
     select q.hn, q.vn, q.queue_id, q.queue_interview, q.queue_number, q.queue_running, q.date_serv, q.time_serv,
-    sp.service_point_name, sp.local_code, q.date_create,
+    sp.service_point_name, sp.local_code, q.date_create, ps.first_name, ps.last_name,
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
     (
@@ -261,6 +288,7 @@ export class QueueModel {
     ) as remain_queue, p.priority_name
     from q4u_queue as q 
     inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
+    inner join q4u_person as ps on ps.hn=q.hn
     left join q4u_priorities as p on p.priority_id=q.priority_id
     where q.queue_id=?
     `;

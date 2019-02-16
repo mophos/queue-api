@@ -95,6 +95,8 @@ const router = (fastify, { }, next) => {
           const remainQueue: any = info.remain_queue || 0;
           const hn: any = info.hn;
           const vn: any = info.vn;
+          const firstName: any = info.first_name;
+          const lastName: any = info.last_name;
           const queueInterview = info.queue_interview;
           const priorityName: any = info.priority_name;
           const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
@@ -105,6 +107,8 @@ const router = (fastify, { }, next) => {
 
           var data: any = {
             "hn": hn,
+            "firstName": firstName,
+            "lastName": lastName,
             "qrcode": qrcode,
             "hosname": hosname,
             "queueNumber": queueNumber,

@@ -262,6 +262,139 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.post('/prepare/register', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const hn = req.body.hn;
+    const servicePointId = req.body.servicePointId;
+    const priorityId = req.body.priorityId;
+
+    if (hn) {
+      // get patient info
+      var rsp: any = await hisModel.getPatientInfoWithHN(dbHIS, hn);
+
+      if (rsp.length) {
+        const vn = moment().format('x');
+        const dateServ = moment().format('YYYY-MM-DD');
+        const timeServ = moment().format('HH:mm:ss');
+        const hisQueue = null;
+        const firstName = rsp[0].first_name;
+        const lastName = rsp[0].last_name;
+        const title = rsp[0].title;
+        const birthDate = moment(rsp[0].birthdate).format('YYYY-MM-DD');
+        const sex = rsp[0].sex;
+
+        if (hn && vn && dateServ && timeServ && firstName && lastName && birthDate) {
+          try {
+            if (servicePointId) {
+              // get prefix
+              const rsPriorityPrefix: any = await priorityModel.getPrefix(db, priorityId);
+              const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || '0';
+              const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
+              const prefixPoint: any = rsPointPrefix[0].prefix || '0';
+
+              const rsDup: any = await queueModel.checkDuplicatedQueue(db, hn, vn, servicePointId);
+              if (rsDup[0].total > 0) {
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลการรับบริการซ้ำ' })
+              } else {
+                await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
+                var queueNumber = 0;
+                var queueInterview = 0;
+
+                var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+                var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+
+                // queue number
+                if (rs1.length) {
+                  queueNumber = rs1[0]['current_queue'] + 1;
+                  await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+                } else {
+                  queueNumber = 1;
+                  await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+                }
+                // queue interview
+                if (rs2.length) {
+                  queueInterview = rs2[0]['current_queue'] + 1;
+                  await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
+                } else {
+                  queueInterview = 1;
+                  await queueModel.createServicePointQueueNumber(db, 999, dateServ);
+                }
+
+                const _queueRunning = queueNumber;
+
+                const queueDigit = +process.env.QUEUE_DIGIT || 3;
+                var _queueNumber = null;
+
+                if (process.env.ZERO_PADDING === 'Y') {
+                  _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+                } else {
+                  _queueNumber = queueNumber.toString();
+                }
+
+                var strQueueNumber: string = null;
+
+                if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+                  strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
+                } else {
+                  strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+                }
+
+                const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+                const qData: any = {};
+                qData.servicePointId = servicePointId;
+                qData.dateServ = dateServ;
+                qData.timeServ = timeServ;
+                qData.queueNumber = strQueueNumber;
+                qData.hn = hn;
+                qData.vn = vn;
+                qData.priorityId = priorityId;
+                qData.dateCreate = dateCreate;
+                qData.hisQueue = hisQueue;
+                qData.queueRunning = _queueRunning;
+                qData.queueInterview = queueInterview;
+
+                const queueId: any = await queueModel.createQueueInfo(db, qData);
+
+                const topic = process.env.QUEUE_CENTER_TOPIC;
+                const topicServicePoint = `${topic}/${servicePointId}`;
+
+                fastify.mqttClient.publish(topic, 'update visit');
+                fastify.mqttClient.publish(topicServicePoint, 'update visit');
+
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
+
+              }
+
+            } else {
+              reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบรหัสแผนกที่ต้องการ' })
+            }
+
+          } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+          }
+
+        } else {
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' })
+        }
+
+      } else {
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .send({
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: 'ไม่พบข้อมูล'
+          })
+      }
+    } else {
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'ไม่ HN'
+        })
+    }
+
+  })
+
   fastify.get('/waiting/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
@@ -288,6 +421,18 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getWorking(db, dateServ, servicePointId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
+  fastify.get('/all-queue/active', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    try {
+      const dateServ: any = moment().format('YYYY-MM-DD');
+      const rs: any = await queueModel.getAllQueueActive(db, dateServ);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
     } catch (error) {
       fastify.log.error(error);
@@ -539,6 +684,19 @@ const router = (fastify, { }, next) => {
     try {
       const rs: any = await queueModel.getCurrentQueueList(db, currentDate);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs[0] })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
+  fastify.delete('/cancel/:queueId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const queueId = req.params.queueId;
+
+    try {
+      await queueModel.markCancel(db, queueId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })

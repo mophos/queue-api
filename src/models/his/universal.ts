@@ -12,6 +12,12 @@ export class UniversalModel {
       .where('cid', cid).limit(1);
   }
 
+  getPatientInfoWithHN(db: knex, hn: any) {
+    return db('q4u_patient')
+      .select('hn', 'first_name', 'title', 'sex', 'last_name', 'birthdate')
+      .where('hn', hn).limit(1);
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('q4u')
       .select('*')
