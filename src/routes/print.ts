@@ -105,6 +105,7 @@ const router = (fastify, { }, next) => {
           const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
 
           var data: any = {
+            "hn": hn,
             "qrcode": qrcode,
             "hosname": hosname,
             "queueNumber": queueNumber,
