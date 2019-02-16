@@ -89,7 +89,6 @@ const router = (fastify, { }, next) => {
           const hosname: any = info.hosname;
           const hosid: any = info.hosid;
           const queueNumber: any = info.queue_number;
-
           const queueWithoutPrefix = +info.queue_running;
 
           const servicePointName: any = info.service_point_name;
