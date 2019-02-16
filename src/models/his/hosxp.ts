@@ -12,6 +12,12 @@ export class HosxpModel {
       .where('cid', cid).limit(1);
   }
 
+  getPatientInfoWithHN(db: knex, hn: any) {
+    return db('patient')
+      .select('hn', 'fname as first_name', 'pname as title', 'sex', 'lname as last_name', 'birthday as birthdate')
+      .where('hn', hn).limit(1);
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('ovst as o')
       .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),

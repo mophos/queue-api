@@ -128,6 +128,21 @@ export class QueueModel {
       .orderBy('q.date_update', 'desc');
   }
 
+  getAllQueueActive(db: knex, dateServ: any) {
+    return db('q4u_queue as q')
+      .select(
+        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.room_id', 'r.room_name', 'r.room_number',
+        'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name', 'p.last_name',
+        'p.birthdate', 'pr.priority_name', 'pr.prority_color', 'sp.service_point_name')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .where('q.date_serv', dateServ)
+      .whereNot('q.is_cancel', 'Y')
+      .orderBy('q.queue_id', 'desc');
+  }
+
   getWorkingHistory(db: knex, dateServ: any, servicePointId: any) {
     return db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
