@@ -187,8 +187,28 @@ const router = (fastify, { }, next) => {
 
   });
 
-  next();
+  fastify.get('/queue', async (req: fastify.Request, reply: fastify.Reply) => {
+    const token = req.query.token;
+    const hn = req.query.hn;
 
+    if (token) {
+      if (hn) {
+        try {
+          const rs = await queueModel.getCurrentQueue(db, hn);
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: rs[0].queue_number });
+        } catch (error) {
+          fastify.log.error(error);
+          reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+        }
+
+      } else {
+        reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' })
+      }
+    } else {
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบ TOKEN' })
+    }
+  });
+  next();
 }
 
 module.exports = router;

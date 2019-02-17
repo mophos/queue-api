@@ -487,6 +487,7 @@ const router = (fastify, { }, next) => {
 
     const queueId = req.body.queueId;
     const servicePointId = req.body.servicePointId;
+    const priorityId = req.body.priorityId;
 
     try {
       await queueModel.markPending(db, queueId, servicePointId);
@@ -494,7 +495,7 @@ const router = (fastify, { }, next) => {
       const rsInfo: any = await queueModel.getDuplicatedQueueInfo(db, queueId);
       if (rsInfo) {
 
-        const priorityId = rsInfo[0].priority_id;
+        // const priorityId = rsInfo[0].priority_id;
         const hn = rsInfo[0].hn;
         const vn = rsInfo[0].vn;
         const hisQueue = rsInfo[0].his_queue;
@@ -509,8 +510,10 @@ const router = (fastify, { }, next) => {
         var queueNumber = 0;
         var strQueueNumber = null;
         var newQueueId = null;
+        var queueInterview = 0;
 
         var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+        var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
         if (rs1.length) {
           queueNumber = rs1[0]['current_queue'] + 1;
@@ -518,6 +521,15 @@ const router = (fastify, { }, next) => {
         } else {
           queueNumber = 1;
           await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+        }
+
+        // queue interview
+        if (rs2.length) {
+          queueInterview = rs2[0]['current_queue'] + 1;
+          await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
+        } else {
+          queueInterview = 1;
+          await queueModel.createServicePointQueueNumber(db, 999, dateServ);
         }
 
         const _queueRunning = queueNumber;
@@ -552,13 +564,17 @@ const router = (fastify, { }, next) => {
         qData.dateCreate = dateCreate;
         qData.hisQueue = hisQueue;
         qData.queueRunning = _queueRunning;
+        qData.queueInterview = queueInterview;
 
         newQueueId = await queueModel.createQueueInfo(db, qData);
 
       }
 
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+      const topic = process.env.QUEUE_CENTER_TOPIC;
+
       fastify.mqttClient.publish(servicePointTopic, 'update visit');
+      fastify.mqttClient.publish(topic, 'update visit');
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
