@@ -313,4 +313,12 @@ export class QueueModel {
     `;
     return db.raw(sql, [queueId, queueId]);
   }
+
+  getCurrentQueue(db: knex, hn) {
+    return db('q4u_queue')
+      .where('hn', hn)
+      .orderBy('queue_id', 'DESC')
+      .limit(1);
+
+  }
 }
