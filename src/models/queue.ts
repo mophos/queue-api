@@ -324,4 +324,11 @@ export class QueueModel {
       .limit(1);
   }
 
+  getCurrentQueue(db: knex, hn: any) {
+    return db('q4u_queue')
+      .where('hn', hn)
+      .orderBy('queue_id', 'DESC')
+      .limit(1);
+
+  }
 }
