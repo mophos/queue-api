@@ -313,4 +313,15 @@ export class QueueModel {
     `;
     return db.raw(sql, [queueId, queueId]);
   }
+
+  apiGetCurrentQueueByHN(db: knex, hn: any, servicePointId: any) {
+    return db('q4u_queue as q')
+      .select('q.room_id', 'q.queue_id', 'q.queue_number', 'pr.priority_name')
+      .leftJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .where('q.hn', hn)
+      .where('q.service_point_id', servicePointId)
+      .orderBy('q.queue_id', 'DESC')
+      .limit(1);
+  }
+
 }
