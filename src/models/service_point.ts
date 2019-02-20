@@ -25,7 +25,6 @@ export class ServicePointModel {
 
   getPrefix(db: knex, servicePointId: any) {
     return db(this.tableName)
-      .select('prefix')
       .where('service_point_id', servicePointId)
       .limit(1);
   }

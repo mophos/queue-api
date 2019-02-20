@@ -3,6 +3,7 @@
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as moment from 'moment';
+const request = require('request')
 
 import { QueueModel } from '../models/queue';
 import { TokenModel } from '../models/token';
@@ -186,6 +187,98 @@ const router = (fastify, { }, next) => {
     }
 
   });
+
+  fastify.post('/call', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const hn = req.body.hn;
+    const servicePointId = req.body.servicePointId;
+    const roomId = req.body.roomId;
+
+    try {
+
+      if (hn) {
+        var rs: any = await queueModel.apiGetCurrentQueueByHN(db, hn, servicePointId);
+        if (rs.length) {
+          var _queue = rs[0];
+
+          const dateServ: any = moment().format('YYYY-MM-DD');
+
+          const queueId = _queue.queue_id;
+          const roomNumber = _queue.room_number;
+          const queueNumber = _queue.queue_number;
+
+          await queueModel.setQueueRoomNumber(db, queueId, roomId);
+          await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
+          await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+          await queueModel.markUnPending(db, queueId);
+
+          await queueModel.markCompleted(db, queueId);
+          // Send notify to H4U Server
+          if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
+            const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+
+            if (rsQueue[0].length) {
+              const data = rsQueue[0][0];
+              const queueWithoutPrefix = +data.queue_running;
+
+              const params = {
+                hosid: data.hosid,
+                servicePointCode: data.service_point_code,
+                queueNumber: data.queue_number,
+                queueWithoutPrefix: queueWithoutPrefix,
+                roomNumber: data.room_number,
+                token: process.env.Q4U_NOTIFY_TOKEN,
+                roomName: data.room_name,
+                dateServ: moment(data.date_serv).format('YYYYMMDD'),
+              };
+
+              request.post(process.env.Q4U_NOTIFY_URL, {
+                form: params
+              }, (err: any, res: any, body: any) => {
+                if (err) console.log(err);
+                console.log(body);
+              });
+
+            }
+
+          }
+
+          // publish mqtt
+          const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+
+          const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+
+          const payload = {
+            queueNumber: queueNumber,
+            roomNumber: roomNumber,
+            servicePointId: servicePointId
+          }
+
+          fastify.mqttClient.publish(globalTopic, 'update visit');
+          fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
+        } else {
+          reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .send({
+              statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+              message: 'ไม่พบคิวที่ต้องการ'
+            });
+        }
+      } else {
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .send({
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: 'ไม่พบ HN'
+          });
+      }
+
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
 
   fastify.get('/queue', async (req: fastify.Request, reply: fastify.Reply) => {
     const token = req.query.token;
