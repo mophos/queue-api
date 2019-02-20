@@ -3,6 +3,7 @@
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as moment from 'moment';
+const request = require('request')
 
 import { QueueModel } from '../models/queue';
 import { TokenModel } from '../models/token';
@@ -66,104 +67,97 @@ const router = (fastify, { }, next) => {
               const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || 'T';
               const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
               const prefixPoint: any = rsPointPrefix[0].prefix || 'T';
+              await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
+              var queueNumber = 0;
+              var queueInterview = 0;
 
-              const rsDup: any = await queueModel.checkDuplicatedQueue(db, hn, vn, servicePointId);
-              if (rsDup[0].total > 0) {
-                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลการรับบริการซ้ำ' })
+              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+
+              // queue number
+              if (rs1.length) {
+                queueNumber = rs1[0]['current_queue'] + 1;
+                await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
               } else {
-                await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
-                var queueNumber = 0;
-                var queueInterview = 0;
+                queueNumber = 1;
+                await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+              }
 
-                var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
-                var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+              // queue interview
+              if (rs2.length) {
+                queueInterview = rs2[0]['current_queue'] + 1;
+                await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
+              } else {
+                queueInterview = 1;
+                await queueModel.createServicePointQueueNumber(db, 999, dateServ);
+              }
 
-                // queue number
-                if (rs1.length) {
-                  queueNumber = rs1[0]['current_queue'] + 1;
-                  await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
-                } else {
-                  queueNumber = 1;
-                  await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
-                }
+              const _queueRunning = queueNumber;
+              const queueDigit = +process.env.QUEUE_DIGIT || 3;
+              // const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-                // queue interview
-                if (rs2.length) {
-                  queueInterview = rs2[0]['current_queue'] + 1;
-                  await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
-                } else {
-                  queueInterview = 1;
-                  await queueModel.createServicePointQueueNumber(db, 999, dateServ);
-                }
+              var _queueNumber = null;
 
-                const _queueRunning = queueNumber;
-                const queueDigit = +process.env.QUEUE_DIGIT || 3;
-                // const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+              if (process.env.ZERO_PADDING === 'Y') {
+                _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+              } else {
+                _queueNumber = queueNumber.toString();
+              }
 
-                var _queueNumber = null;
+              var strQueueNumber: string = null;
 
-                if (process.env.ZERO_PADDING === 'Y') {
-                  _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
-                } else {
-                  _queueNumber = queueNumber.toString();
-                }
+              if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+                strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
+              } else {
+                strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+              }
 
-                var strQueueNumber: string = null;
+              const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
-                if (process.env.USE_PRIORITY_PREFIX === 'Y') {
-                  strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
-                } else {
-                  strQueueNumber = `${prefixPoint} ${_queueNumber}`;
-                }
+              const qData: any = {};
+              qData.servicePointId = servicePointId;
+              qData.dateServ = dateServ;
+              qData.timeServ = timeServ;
+              qData.queueNumber = strQueueNumber;
+              qData.hn = hn;
+              qData.vn = vn;
+              qData.priorityId = priorityId;
+              qData.dateCreate = dateCreate;
+              qData.hisQueue = hisQueue;
+              qData.queueRunning = _queueRunning;
+              qData.queueInterview = queueInterview;
 
-                const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
+              var rsQueue: any = await queueModel.createQueueInfo(db, qData);
+              var queueId = rsQueue[0];
 
-                const qData: any = {};
-                qData.servicePointId = servicePointId;
-                qData.dateServ = dateServ;
-                qData.timeServ = timeServ;
-                qData.queueNumber = strQueueNumber;
-                qData.hn = hn;
-                qData.vn = vn;
-                qData.priorityId = priorityId;
-                qData.dateCreate = dateCreate;
-                qData.hisQueue = hisQueue;
-                qData.queueRunning = _queueRunning;
-                qData.queueInterview = queueInterview;
+              const rs: any = await queueModel.getPrintInfo(db, queueId);
 
-                var rsQueue: any = await queueModel.createQueueInfo(db, qData);
-                var queueId = rsQueue[0];
+              if (rs[0].length) {
+                const info: any = rs[0][0];
+                const hosname: any = info.hosname;
+                const hosid: any = info.hosid;
+                const queueNumber: any = info.queue_number;
 
-                const rs: any = await queueModel.getPrintInfo(db, queueId);
+                const queueWithoutPrefix = +info.queue_running;
 
-                if (rs[0].length) {
-                  const info: any = rs[0][0];
-                  const hosname: any = info.hosname;
-                  const hosid: any = info.hosid;
-                  const queueNumber: any = info.queue_number;
+                const servicePointName: any = info.service_point_name;
+                // const remainQueue: any = info.remain_queue || 0;
+                const hn: any = info.hn;
+                const vn: any = info.vn;
+                const priorityName: any = info.priority_name;
+                const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
+                const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
+                // const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
+                const localCode: any = info.local_code;
+                const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
 
-                  const queueWithoutPrefix = +info.queue_running;
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueId: queueId, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
 
-                  const servicePointName: any = info.service_point_name;
-                  // const remainQueue: any = info.remain_queue || 0;
-                  const hn: any = info.hn;
-                  const vn: any = info.vn;
-                  const priorityName: any = info.priority_name;
-                  const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
-                  const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
-                  // const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
-                  const localCode: any = info.local_code;
-                  const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
+                const topic = process.env.QUEUE_CENTER_TOPIC;
+                fastify.mqttClient.publish(topic, 'update visit');
 
-                  reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueId: queueId, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
-
-                  const topic = process.env.QUEUE_CENTER_TOPIC;
-                  fastify.mqttClient.publish(topic, 'update visit');
-
-                } else {
-                  reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.BAD_REQUEST, message: 'ไม่พบรหัสคิวที่ต้องการ' })
-                }
-
+              } else {
+                reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.BAD_REQUEST, message: 'ไม่พบรหัสคิวที่ต้องการ' })
               }
 
             } else {
@@ -186,6 +180,98 @@ const router = (fastify, { }, next) => {
     }
 
   });
+
+  fastify.post('/call', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const hn = req.body.hn;
+    const servicePointId = req.body.servicePointId;
+    const roomId = req.body.roomId;
+
+    try {
+
+      if (hn) {
+        var rs: any = await queueModel.apiGetCurrentQueueByHN(db, hn, servicePointId);
+        if (rs.length) {
+          var _queue = rs[0];
+
+          const dateServ: any = moment().format('YYYY-MM-DD');
+
+          const queueId = _queue.queue_id;
+          const roomNumber = _queue.room_number;
+          const queueNumber = _queue.queue_number;
+
+          await queueModel.setQueueRoomNumber(db, queueId, roomId);
+          await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
+          await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+          await queueModel.markUnPending(db, queueId);
+
+          await queueModel.markCompleted(db, queueId);
+          // Send notify to H4U Server
+          if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
+            const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+
+            if (rsQueue[0].length) {
+              const data = rsQueue[0][0];
+              const queueWithoutPrefix = +data.queue_running;
+
+              const params = {
+                hosid: data.hosid,
+                servicePointCode: data.service_point_code,
+                queueNumber: data.queue_number,
+                queueWithoutPrefix: queueWithoutPrefix,
+                roomNumber: data.room_number,
+                token: process.env.Q4U_NOTIFY_TOKEN,
+                roomName: data.room_name,
+                dateServ: moment(data.date_serv).format('YYYYMMDD'),
+              };
+
+              request.post(process.env.Q4U_NOTIFY_URL, {
+                form: params
+              }, (err: any, res: any, body: any) => {
+                if (err) console.log(err);
+                console.log(body);
+              });
+
+            }
+
+          }
+
+          // publish mqtt
+          const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+
+          const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+
+          const payload = {
+            queueNumber: queueNumber,
+            roomNumber: roomNumber,
+            servicePointId: servicePointId
+          }
+
+          fastify.mqttClient.publish(globalTopic, 'update visit');
+          fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
+        } else {
+          reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .send({
+              statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+              message: 'ไม่พบคิวที่ต้องการ'
+            });
+        }
+      } else {
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .send({
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: 'ไม่พบ HN'
+          });
+      }
+
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
 
   fastify.get('/queue', async (req: fastify.Request, reply: fastify.Reply) => {
     const token = req.query.token;

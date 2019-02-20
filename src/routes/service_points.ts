@@ -44,6 +44,7 @@ const router = (fastify, { }, next) => {
     const departmentId = req.body.departmentId;
     const prefix = req.body.prefix;
     const kios = req.body.kios;
+    const useOldQueue = req.body.useOldQueue || 'N';
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -55,7 +56,8 @@ const router = (fastify, { }, next) => {
       department_id: departmentId,
       prefix: prefix,
       topic: strRnd,
-      kios: kios
+      kios: kios,
+      use_old_queue: useOldQueue
     };
 
     try {
@@ -76,6 +78,7 @@ const router = (fastify, { }, next) => {
     const departmentId = req.body.departmentId;
     const prefix = req.body.prefix;
     const kios = req.body.kios;
+    const useOldQueue = req.body.useOldQueue || 'N';
 
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
@@ -87,7 +90,8 @@ const router = (fastify, { }, next) => {
       department_id: departmentId,
       prefix: prefix,
       topic: strRnd,
-      kios: kios
+      kios: kios,
+      use_old_queue: useOldQueue
     };
 
     try {
