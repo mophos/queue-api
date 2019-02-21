@@ -28,7 +28,10 @@ const router = (fastify, { }, next) => {
   fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const createdDate = moment().format('YYYY-MM-DD HH:mm:ss');
     const expiredDate = moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss');
-    const token = fastify.jwt.sign({ issue: 'h4u', description: 'for access Q4U api' }, { expiresIn: '1y' });
+    const token = fastify.jwt.sign({
+      issue: 'h4u',
+      description: 'for access Q4U api'
+    }, { expiresIn: '1y' });
 
     const data: any = {
       token: token,
