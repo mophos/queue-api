@@ -68,7 +68,7 @@ const router = (fastify, { }, next) => {
     };
 
     if (password) {
-      var encPass = crypto.createHash('md5').update('md5').digest('hex');
+      var encPass = crypto.createHash('md5').update(password).digest('hex');
       info.password = encPass;
     }
 
