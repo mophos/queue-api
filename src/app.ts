@@ -93,7 +93,7 @@ app.register(require('./plugins/db'), {
   connectionName: 'db'
 });
 
-if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql') {
+if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql' || process.env.DBHIS_TYPE === 'oracledb') {
 
   app.register(require('./plugins/db'), {
     connection: {
@@ -180,7 +180,7 @@ app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
   reply.code(200).send({ message: 'Welcome to Q4U API services!', version: '2.0.0 build 20190229-1' })
 });
 
-const port = 3002;
+const port = 3003;
 const host = '0.0.0.0';
 
 app.listen(port, host, (err) => {
