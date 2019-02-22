@@ -29,9 +29,25 @@ export class QueueModel {
       });
   }
 
+  markInterviewGroup(db: knex, queueId: any) {
+    return db('q4u_queue')
+      .whereIn('queue_id', queueId)
+      .update({
+        'is_interview': 'Y',
+      });
+  }
+
   markCompleted(db: knex, queueId: any) {
     return db('q4u_queue')
       .where('queue_id', queueId)
+      .update({
+        'is_completed': 'Y',
+      });
+  }
+
+  markCompletedGroup(db: knex, queueId: any) {
+    return db('q4u_queue')
+      .whereIn('queue_id', queueId)
       .update({
         'is_completed': 'Y',
       });
@@ -159,7 +175,36 @@ export class QueueModel {
       .where('q.date_serv', dateServ);
     // .whereNull('q.room_id');
   }
+  getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
+    return db('q4u_queue as q')
+      .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
+        'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
+        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .where('q.service_point_id', servicePointId)
+      .where('q.date_serv', dateServ)
+      // .whereNull('q.room_id')
+      .where('q.mark_pending', 'N')
+      .where('q.date_serv', dateServ)
+      .whereNot('q.is_cancel', 'Y')
+      .orderBy('q.queue_id', 'asc')
+      .groupBy('q.queue_id')
+      .limit(limit)
+      .offset(offset);
+  }
 
+  getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any) {
+    return db('q4u_queue as q')
+      .select(db.raw('count(*) as total'))
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .where('q.service_point_id', servicePointId)
+      .where('q.mark_pending', 'N')
+      .whereNot('q.is_cancel', 'Y')
+      .where('q.date_serv', dateServ);
+    // .whereNull('q.room_id');
+  }
   getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
     return db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
@@ -246,6 +291,28 @@ export class QueueModel {
       .orderBy('q.queue_id', 'desc');
   }
 
+  getWorkingHistoryGroup(db: knex, dateServ: any, servicePointId: any) {
+    let sql = db('q4u_queue as q')
+      .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
+        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
+        'p.birthdate', 'pr.priority_name', 'pr.prority_color',
+        'r.room_name', 'r.room_number', 'sp.service_point_name')
+      // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
+      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .where('q.date_serv', dateServ)
+      .where('q.service_point_id', servicePointId)
+      .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
+      // .groupByRaw('qd.date_serv, qd.service_point_id')
+      .limit(10)
+      .orderBy('q.date_update', 'desc');
+    return sql;
+
+  }
   getWorkingHistory(db: knex, dateServ: any, servicePointId: any) {
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
@@ -313,10 +380,21 @@ export class QueueModel {
       .where('queue_id', queueId)
       .update({ room_id: roomId });
   }
+  setQueueGroupRoomNumber(db: knex, queueId, roomId) {
+    return db('q4u_queue')
+      .whereIn('queue_id', queueId)
+      .update({ room_id: roomId });
+  }
 
   markUnPending(db: knex, queueId) {
     return db('q4u_queue')
       .where('queue_id', queueId)
+      .update({ mark_pending: 'N' });
+  }
+
+  markUnPendingGroup(db: knex, queueId) {
+    return db('q4u_queue')
+      .whereIn('queue_id', queueId)
       .update({ mark_pending: 'N' });
   }
 
@@ -335,6 +413,24 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueId]);
   }
 
+  updateCurrentQueueGroup(db: knex, servicePointId, dateServ, queueId, roomId, queueRunning) {
+    var sql = `
+    INSERT INTO q4u_queue_group_detail(service_point_id, date_serv, queue_id, room_id, queue_running)
+    VALUES(?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE queue_id=?
+    `;
+    return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueRunning, queueId]);
+  }
+
+  updateCurrentQueueGroups(db: knex, queue) {
+    var sql = `
+    INSERT INTO q4u_queue_group_detail('service_point_id', 'date_serv', 'queue_id', 'room_id', 'queue_running')
+    VALUES(${queue})
+    ON DUPLICATE KEY UPDATE queue_id=VALUES('queue_id')
+    `;
+    return db.raw(sql);
+  }
+  
   // changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
   //   return db('q4u_queue_detail')
   //     .where('service_point_id', servicePointId)
@@ -348,6 +444,22 @@ export class QueueModel {
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
       .where('queue_id', queueId)
+      .del();
+  }
+
+  removeCurrentQueueGroup(db: knex, servicePointId, dateServ, queueId) {
+    return db('q4u_queue_group_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .where('queue_id', queueId)
+      .del();
+  }
+
+  removeCurrentQueueGroups(db: knex, servicePointId, dateServ, queueId) {
+    return db('q4u_queue_group_detail')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
+      .whereIn('queue_id', queueId)
       .del();
   }
 
