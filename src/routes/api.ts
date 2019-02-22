@@ -40,7 +40,7 @@ const router = (fastify, { }, next) => {
     const vn = req.body.vn;
     const localCode = req.body.clinicCode;
     const priorityId = req.body.priorityId;
-    const dateServ = req.body.dateServ;
+    const dateServ = moment().format('YYYY-MM-DD');
     const timeServ = req.body.timeServ;
     const hisQueue = req.body.hisQueue;
     const firstName = req.body.firstName;

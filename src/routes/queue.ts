@@ -579,7 +579,6 @@ const router = (fastify, { }, next) => {
       // get queue info
       const rsInfo: any = await queueModel.getDuplicatedQueueInfo(db, queueId);
       if (rsInfo) {
-        // const priorityId = rsInfo[0].priority_id;
         const hn = rsInfo[0].hn;
         const vn = rsInfo[0].vn;
         const hisQueue = rsInfo[0].his_queue;
