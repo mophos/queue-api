@@ -93,7 +93,7 @@ app.register(require('./plugins/db'), {
   connectionName: 'db'
 });
 
-if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql') {
+if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql' || process.env.DBHIS_TYPE === 'oracledb') {
 
   app.register(require('./plugins/db'), {
     connection: {

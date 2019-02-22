@@ -10,7 +10,7 @@ DBHIS_NAME=hi
 DBHIS_USER=root
 DBHIS_PASSWORD=#######
 
-# เช่น mysql, pg, mssql
+# เช่น mysql, pg, mssql, oracledb
 DBHIS_TYPE=mysql
 
 SECRET_KEY=1234567890
