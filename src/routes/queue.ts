@@ -811,6 +811,7 @@ const router = (fastify, { }, next) => {
     let queueIds: any = []
     let queueData: any = []
     try {
+      const dateServ: any = moment().format('YYYY-MM-DD');
       queue = Array.isArray(queue) ? queue : [queue];
       queue.forEach(v => {
         queueIds.push(v.queue_id)
@@ -822,7 +823,6 @@ const router = (fastify, { }, next) => {
           queue_running: v.queue_running
         })
       });
-      const dateServ: any = moment().format('YYYY-MM-DD');
 
       await queueModel.setQueueGroupRoomNumber(db, queueIds, roomId);
       await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, queueIds);
@@ -882,7 +882,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
     } catch (error) {
-      // fastify.log.error(error);
+      fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
   })

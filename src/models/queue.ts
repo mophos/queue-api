@@ -184,7 +184,7 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
-      // .whereNull('q.room_id')
+      .whereNull('q.room_id')
       .where('q.mark_pending', 'N')
       .where('q.date_serv', dateServ)
       .whereNot('q.is_cancel', 'Y')
@@ -202,8 +202,8 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'N')
       .whereNot('q.is_cancel', 'Y')
-      .where('q.date_serv', dateServ);
-    // .whereNull('q.room_id');
+      .where('q.date_serv', dateServ)
+      .whereNull('q.room_id');
   }
   getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
     return db('q4u_queue as q')
@@ -294,7 +294,7 @@ export class QueueModel {
   getWorkingHistoryGroup(db: knex, dateServ: any, servicePointId: any) {
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
-        'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
@@ -423,12 +423,20 @@ export class QueueModel {
   }
 
   updateCurrentQueueGroups(db: knex, queue) {
-    var sql = `
-    INSERT INTO q4u_queue_group_detail('service_point_id', 'date_serv', 'queue_id', 'room_id', 'queue_running')
-    VALUES(${queue})
-    ON DUPLICATE KEY UPDATE queue_id=VALUES('queue_id')
-    `;
-    return db.raw(sql);
+    var questionMarks = "";
+    var values = [];
+    queue.forEach(function(value, index){
+      questionMarks += "("
+      Object.keys(value).forEach(function(x){
+           questionMarks += "?, ";
+           values.push(value[x]);
+      });
+      questionMarks = questionMarks.substr(0, questionMarks.length - 2);
+      questionMarks += "), ";
+  });
+  questionMarks = questionMarks.substr(0, questionMarks.length - 2);
+    var sql = 'INSERT INTO q4u_queue_group_detail (`service_point_id`, `date_serv`, `queue_id`, `room_id`, `queue_running`) VALUES '+questionMarks+' ON DUPLICATE KEY UPDATE queue_id = VALUES(`queue_id`)';
+    return db.raw(sql, values);
   }
   
   // changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
