@@ -254,6 +254,27 @@ export class QueueModel {
       .orderBy('q.date_update', 'desc');
   }
 
+  getWorkingGroup(db: knex, dateServ: any, servicePointId: any) {
+    return db('q4u_queue_group_detail as qd')
+      .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
+        'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
+        'p.birthdate', 'pr.priority_name', 'pr.prority_color',
+        'r.room_name', 'r.room_number', 'sp.service_point_name')
+      .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'qd.room_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .where('qd.date_serv', dateServ)
+      .where('qd.service_point_id', servicePointId)
+      .whereNot('q.mark_pending', 'Y')
+      .whereNot('q.is_cancel', 'Y')
+      .where('qd.update_date', db('q4u_queue_group_detail').select('update_date').where('date_serv', dateServ).orderBy('update_date','desc').limit(1))
+      // .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
+      .orderBy('q.date_update', 'desc')
+      .orderBy('q.queue_running');
+  }
+
   getWorkingDepartment(db: knex, dateServ: any, departmentId: any) {
 
     let sql = db('q4u_queue as q')
@@ -309,7 +330,8 @@ export class QueueModel {
       .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(10)
-      .orderBy('q.date_update', 'desc');
+      .orderBy('q.date_update', 'desc')
+      .orderBy('q.queue_running', 'desc');
     return sql;
 
   }
