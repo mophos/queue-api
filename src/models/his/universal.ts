@@ -25,10 +25,6 @@ export class UniversalModel {
       .whereIn('clinic_code', localCode)
       .whereNotIn('vn', vn);
 
-    if (servicePointCode) {
-      sql.where('clinic_code', servicePointCode);
-    }
-
     if (query) {
       var _arrQuery = query.split(' ');
       var firstName = null;
@@ -47,6 +43,10 @@ export class UniversalModel {
         return _where;
       });
 
+    } else {
+      if (servicePointCode) {
+        sql.where('clinic_code', servicePointCode);
+      }
     }
 
     return sql.limit(limit)
@@ -80,10 +80,10 @@ export class UniversalModel {
         return _where;
       });
 
-    }
-
-    if (servicePointCode) {
-      sql.where('clinic_code', servicePointCode);
+    } else {
+      if (servicePointCode) {
+        sql.where('clinic_code', servicePointCode);
+      }
     }
 
     return sql;

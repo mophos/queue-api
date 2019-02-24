@@ -30,10 +30,6 @@ export class HosxpModel {
       .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
 
-    if (servicePointCode) {
-      sql.where('o.main_dep', servicePointCode);
-    }
-
     if (query) {
       var _arrQuery = query.split(' ');
       var firstName = null;
@@ -51,6 +47,10 @@ export class HosxpModel {
         }
         return _where;
       });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
     }
 
     return sql.limit(limit)
@@ -68,10 +68,6 @@ export class HosxpModel {
       .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
 
-    if (servicePointCode) {
-      sql.where('o.main_dep', servicePointCode);
-    }
-
     if (query) {
       var _arrQuery = query.split(' ');
       var firstName = null;
@@ -89,6 +85,10 @@ export class HosxpModel {
         }
         return _where;
       });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
     }
 
     return sql.orderBy('o.vsttime', 'asc');
