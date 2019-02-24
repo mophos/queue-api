@@ -705,7 +705,7 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-
+    let departmentId;
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
@@ -721,13 +721,14 @@ const router = (fastify, { }, next) => {
 
       // Send notify to H4U Server
       // 
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+      if (rsQueue[0].length) {
+        departmentId = rsQueue[0][0].department_id;
+      }
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
-        const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
-        // console.log(rsQueue[0]);
         if (rsQueue[0].length) {
           const data = rsQueue[0][0];
           const queueWithoutPrefix = +data.queue_running;
-
           const params = {
             hosid: data.hosid,
             servicePointCode: data.service_point_code,
@@ -752,17 +753,21 @@ const router = (fastify, { }, next) => {
 
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
-
+      const departmentTopic = process.env.DEPARTMENT_TOPIC + '/' + departmentId;
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+      console.log(departmentTopic);
+
 
       const payload = {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
-        servicePointId: servicePointId
+        servicePointId: servicePointId,
+        departmentId: departmentId
       }
 
       fastify.mqttClient.publish(globalTopic, 'update visit');
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+      fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload));
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -781,7 +786,6 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-    console.log(servicePointId, queueId, roomId);
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
