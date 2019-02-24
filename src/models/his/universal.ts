@@ -18,6 +18,15 @@ export class UniversalModel {
       .where('hn', hn).limit(1);
   }
 
+  getHISQueue(db: knex, hn: any, dateServ: any) {
+    return db('q4u')
+      .select('his_queue as queue')
+      .where('hn', hn)
+      .where('date_serv', dateServ)
+      .orderBy('vn', 'DESC')
+      .limit(1)
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('q4u')
       .select('*')

@@ -18,6 +18,15 @@ export class HosxpModel {
       .where('hn', hn).limit(1);
   }
 
+  getHISQueue(db: knex, hn: any, dateServ: any) {
+    return db('ovst')
+      .select('oqueue as queue')
+      .where('hn', hn)
+      .where('vstdate', dateServ)
+      .orderBy('vn', 'DESC')
+      .limit(1)
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('ovst as o')
       .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),
