@@ -29,10 +29,6 @@ export class HiModel {
       .whereIn('o.cln', localCode)
       .whereNotIn('o.vn', vn);
 
-    if (servicePointCode) {
-      sql.where('o.cln', servicePointCode);
-    }
-
     if (query) {
       var _arrQuery = query.split(' ');
       var firstName = null;
@@ -51,6 +47,10 @@ export class HiModel {
         return _where;
       });
 
+    } else {
+      if (servicePointCode) {
+        sql.where('o.cln', servicePointCode);
+      }
     }
 
     return sql.limit(limit)
@@ -87,10 +87,10 @@ export class HiModel {
         return _where;
       });
 
-    }
-
-    if (servicePointCode) {
-      sql.where('o.cln', servicePointCode);
+    } else {
+      if (servicePointCode) {
+        sql.where('o.cln', servicePointCode);
+      }
     }
 
     return sql;

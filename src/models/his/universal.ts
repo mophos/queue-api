@@ -18,16 +18,21 @@ export class UniversalModel {
       .where('hn', hn).limit(1);
   }
 
+  getHISQueue(db: knex, hn: any, dateServ: any) {
+    return db('q4u')
+      .select('his_queue as queue')
+      .where('hn', hn)
+      .where('date_serv', dateServ)
+      .orderBy('vn', 'DESC')
+      .limit(1)
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('q4u')
       .select('*')
       .where('date_serv', dateServ)
       .whereIn('clinic_code', localCode)
       .whereNotIn('vn', vn);
-
-    if (servicePointCode) {
-      sql.where('clinic_code', servicePointCode);
-    }
 
     if (query) {
       var _arrQuery = query.split(' ');
@@ -47,6 +52,10 @@ export class UniversalModel {
         return _where;
       });
 
+    } else {
+      if (servicePointCode) {
+        sql.where('clinic_code', servicePointCode);
+      }
     }
 
     return sql.limit(limit)
@@ -80,10 +89,10 @@ export class UniversalModel {
         return _where;
       });
 
-    }
-
-    if (servicePointCode) {
-      sql.where('clinic_code', servicePointCode);
+    } else {
+      if (servicePointCode) {
+        sql.where('clinic_code', servicePointCode);
+      }
     }
 
     return sql;
