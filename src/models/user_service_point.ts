@@ -7,7 +7,8 @@ export class UserServicePointsModel {
   list(db: knex, userId: any) {
     return db('q4u_user_service_points as up')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'up.service_point_id')
-      .select('up.*', 'sp.service_point_name', 'sp.local_code', 'sp.department_id')
+      .innerJoin('q4u_departments as d', 'sp.department_id', 'd.department_id')
+      .select('up.*', 'sp.service_point_name', 'sp.local_code', 'sp.department_id', 'd.department_name')
       .where('up.user_id', userId);
   }
 
