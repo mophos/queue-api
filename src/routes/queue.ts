@@ -139,6 +139,7 @@ const router = (fastify, { }, next) => {
 
       const rsTotal: any = await hisModel.getVisitTotal(dbHIS, dateServ, localCodes, vn, servicePointCode, query);
       const rs: any = await hisModel.getVisitList(dbHIS, dateServ, localCodes, vn, servicePointCode, query, limit, offset);
+
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
       fastify.log.error(error);
@@ -178,17 +179,54 @@ const router = (fastify, { }, next) => {
           var queueNumber = 0;
           var queueInterview = 0;
 
-          var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+          var useHISQueue = process.env.USE_HIS_QUEUE || 'N';
+
+          var _queueRunning = 0;
+
+          if (useHISQueue === 'Y') {
+            var rsQueue = await hisModel.getHISQueue(dbHIS, hn, dateServ);
+            if (rsQueue.length) {
+              var queue = rsQueue[0].queue;
+              strQueueNumber = queue;
+            } else {
+              strQueueNumber = '000';
+            }
+          } else {
+            // queue number
+            var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+
+            if (rs1.length) {
+              queueNumber = rs1[0]['current_queue'] + 1;
+              await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+            } else {
+              queueNumber = 1;
+              await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+            }
+
+            _queueRunning = queueNumber;
+
+            const queueDigit = +process.env.QUEUE_DIGIT || 3;
+            var _queueNumber = null;
+
+            if (process.env.ZERO_PADDING === 'Y') {
+              _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+            } else {
+              _queueNumber = queueNumber.toString();
+            }
+
+            var strQueueNumber: string = null;
+
+            if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+              strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
+            } else {
+              strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+            }
+
+
+          }
+
           var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
-          // queue number
-          if (rs1.length) {
-            queueNumber = rs1[0]['current_queue'] + 1;
-            await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
-          } else {
-            queueNumber = 1;
-            await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
-          }
           // queue interview
           if (rs2.length) {
             queueInterview = rs2[0]['current_queue'] + 1;
@@ -196,25 +234,6 @@ const router = (fastify, { }, next) => {
           } else {
             queueInterview = 1;
             await queueModel.createServicePointQueueNumber(db, 999, dateServ);
-          }
-
-          const _queueRunning = queueNumber;
-
-          const queueDigit = +process.env.QUEUE_DIGIT || 3;
-          var _queueNumber = null;
-
-          if (process.env.ZERO_PADDING === 'Y') {
-            _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
-          } else {
-            _queueNumber = queueNumber.toString();
-          }
-
-          var strQueueNumber: string = null;
-
-          if (process.env.USE_PRIORITY_PREFIX === 'Y') {
-            strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
-          } else {
-            strQueueNumber = `${prefixPoint} ${_queueNumber}`;
           }
 
           const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -747,7 +766,7 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-
+    let departmentId;
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
@@ -763,13 +782,14 @@ const router = (fastify, { }, next) => {
 
       // Send notify to H4U Server
       // 
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+      if (rsQueue[0].length) {
+        departmentId = rsQueue[0][0].department_id;
+      }
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
-        const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
-        // console.log(rsQueue[0]);
         if (rsQueue[0].length) {
           const data = rsQueue[0][0];
           const queueWithoutPrefix = +data.queue_running;
-
           const params = {
             hosid: data.hosid,
             servicePointCode: data.service_point_code,
@@ -794,17 +814,21 @@ const router = (fastify, { }, next) => {
 
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
-
+      const departmentTopic = process.env.DEPARTMENT_TOPIC + '/' + departmentId;
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+      console.log(departmentTopic);
+
 
       const payload = {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
-        servicePointId: servicePointId
+        servicePointId: servicePointId,
+        departmentId: departmentId
       }
 
       fastify.mqttClient.publish(globalTopic, 'update visit');
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload));
+      fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload));
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -987,7 +1011,6 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-    console.log(servicePointId, queueId, roomId);
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');

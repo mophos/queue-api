@@ -18,6 +18,15 @@ export class HosxpModel {
       .where('hn', hn).limit(1);
   }
 
+  getHISQueue(db: knex, hn: any, dateServ: any) {
+    return db('ovst')
+      .select('oqueue as queue')
+      .where('hn', hn)
+      .where('vstdate', dateServ)
+      .orderBy('vn', 'DESC')
+      .limit(1)
+  }
+
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('ovst as o')
       .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),
@@ -29,10 +38,6 @@ export class HosxpModel {
       .where('o.vstdate', dateServ)
       .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
-
-    if (servicePointCode) {
-      sql.where('o.main_dep', servicePointCode);
-    }
 
     if (query) {
       var _arrQuery = query.split(' ');
@@ -51,6 +56,10 @@ export class HosxpModel {
         }
         return _where;
       });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
     }
 
     return sql.limit(limit)
@@ -68,10 +77,6 @@ export class HosxpModel {
       .whereIn('o.main_dep', localCode)
       .whereNotIn('o.vn', vn);
 
-    if (servicePointCode) {
-      sql.where('o.main_dep', servicePointCode);
-    }
-
     if (query) {
       var _arrQuery = query.split(' ');
       var firstName = null;
@@ -89,6 +94,10 @@ export class HosxpModel {
         }
         return _where;
       });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
     }
 
     return sql.orderBy('o.vsttime', 'asc');
