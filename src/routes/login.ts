@@ -38,6 +38,7 @@ const router = (fastify, { }, next) => {
           QUEUE_CENTER_TOPIC: process.env.QUEUE_CENTER_TOPIC,
           SERVICE_POINT_TOPIC: process.env.SERVICE_POINT_TOPIC,
           DEPARTMENT_TOPIC: process.env.DEPARTMENT_TOPIC,
+          GROUP_TOPIC: process.env.GROUP_TOPIC,
           NOTIFY_USER: process.env.LOCAL_NOTIFY_USER,
           NOTIFY_PASSWORD: process.env.LOCAL_NOTIFY_PASSWORD,
           NOTIFY_SERVER: process.env.LOCAL_NOTIFY_SERVER,
