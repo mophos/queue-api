@@ -914,34 +914,39 @@ const router = (fastify, { }, next) => {
 
       // Send notify to H4U Server
 
-      // if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
-      //   const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
-      //   // console.log(rsQueue[0]);
-      //   if (rsQueue[0].length) {
-      //     const data = rsQueue[0][0];
-      //     const queueWithoutPrefix = +data.queue_running;
+      if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-      //     const params = {
-      //       hosid: data.hosid,
-      //       servicePointCode: data.service_point_code,
-      //       queueNumber: data.queue_number,
-      //       queueWithoutPrefix: queueWithoutPrefix,
-      //       roomNumber: data.room_number,
-      //       token: process.env.Q4U_NOTIFY_TOKEN,
-      //       roomName: data.room_name,
-      //       dateServ: moment(data.date_serv).format('YYYYMMDD'),
-      //     };
+        queueIds.forEach(async (v: any) =>  {
+          const rsQueue: any = await queueModel.getResponseQueueInfo(db, v.queue_id);
+        // console.log(rsQueue[0]);
+        if (rsQueue[0].length) {
+          const data = rsQueue[0][0];
+          const queueWithoutPrefix = +data.queue_running;
 
-      //     request.post(process.env.Q4U_NOTIFY_URL, {
-      //       form: params
-      //     }, (err: any, res: any, body: any) => {
-      //       if (err) console.log(err);
-      //       console.log(body);
-      //     });
+          const params = {
+            hosid: data.hosid,
+            servicePointCode: data.service_point_code,
+            queueNumber: data.queue_number,
+            queueWithoutPrefix: queueWithoutPrefix,
+            roomNumber: data.room_number,
+            token: process.env.Q4U_NOTIFY_TOKEN,
+            roomName: data.room_name,
+            dateServ: moment(data.date_serv).format('YYYYMMDD'),
+          };
 
-      //   }
+          request.post(process.env.Q4U_NOTIFY_URL, {
+            form: params
+          }, (err: any, res: any, body: any) => {
+            if (err) console.log(err);
+            console.log(body);
+          });
 
-      // }
+        }
+        });
+
+        
+
+      }
 
       // publish mqtt
       const groupTopic = process.env.GROUP_TOPIC + '/' + servicePointId;

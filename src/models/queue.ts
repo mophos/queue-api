@@ -297,7 +297,7 @@ export class QueueModel {
       .where('qd.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
-      .where('qd.update_date', db('q4u_queue_group_detail').select('update_date').where('date_serv', dateServ).orderBy('update_date','desc').limit(1))
+      .where('qd.update_date', db('q4u_queue_group_detail').select('update_date').where('date_serv', dateServ).where('service_point_id', servicePointId).orderBy('update_date','desc').limit(1))
       // .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
       .orderBy('q.date_update', 'desc')
       .orderBy('q.queue_running');
