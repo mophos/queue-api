@@ -902,15 +902,15 @@ const router = (fastify, { }, next) => {
         queueNumber.push(v.queue_number);
       });
 
-      await queueModel.setQueueGroupRoomNumber(db, queueIds, roomId);
+      // await queueModel.setQueueGroupRoomNumber(db, queueIds, roomId);
       await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, queueIds);
       await queueModel.updateCurrentQueueGroups(db, queueData);
-      await queueModel.markUnPendingGroup(db, queueIds);
-      if (isCompleted === 'N') {
-        await queueModel.markInterviewGroup(db, queueIds);
-      } else {
-        await queueModel.markCompletedGroup(db, queueIds);
-      }
+      // await queueModel.markUnPendingGroup(db, queueIds);
+      // if (isCompleted === 'N') {
+      //   await queueModel.markInterviewGroup(db, queueIds);
+      // } else {
+      //   await queueModel.markCompletedGroup(db, queueIds);
+      // }
 
       // Send notify to H4U Server
 
@@ -984,15 +984,15 @@ const router = (fastify, { }, next) => {
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
-      await queueModel.setQueueRoomNumber(db, queueId, roomId);
+      // await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.removeCurrentQueueGroup(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueueGroup(db, servicePointId, dateServ, queueId, roomId, queueRunning);
-      await queueModel.markUnPending(db, queueId);
-      if (isCompleted === 'N') {
-        await queueModel.markInterview(db, queueId);
-      } else {
-        await queueModel.markCompleted(db, queueId);
-      }
+      // await queueModel.markUnPending(db, queueId);
+      // if (isCompleted === 'N') {
+      //   await queueModel.markInterview(db, queueId);
+      // } else {
+      //   await queueModel.markCompleted(db, queueId);
+      // }
 
       // Send notify to H4U Server
       // 
@@ -1172,7 +1172,7 @@ const router = (fastify, { }, next) => {
     const dateServ = moment().format('YYYY-MM-DD');
 
     try {
-      await queueModel.setQueueRoomNumber(db, queueId, roomId);
+      // await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.removeCurrentQueueGroup(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueueGroup(db, servicePointId, dateServ, queueId, roomId, queueRunning);
 
