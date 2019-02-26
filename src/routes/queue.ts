@@ -950,6 +950,7 @@ const router = (fastify, { }, next) => {
 
       // publish mqtt
       const groupTopic = process.env.GROUP_TOPIC + '/' + servicePointId;
+      const topic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
       // const globalTopic = process.env.QUEUE_CENTER_TOPIC;
 
       const payload = {
@@ -960,6 +961,7 @@ const router = (fastify, { }, next) => {
       // console.log(payload);
 
       // fastify.mqttClient.publish(globalTopic, 'update visit');
+      fastify.mqttClient.publish(topic, 'update visit');
       fastify.mqttClient.publish(groupTopic, JSON.stringify(payload));
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
