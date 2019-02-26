@@ -154,7 +154,7 @@ const router = (fastify, { }, next) => {
                 reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueId: queueId, hn: hn, vn: vn, queueNumber: queueNumber, qrcode: qrcode });
 
                 const topic = process.env.QUEUE_CENTER_TOPIC;
-                fastify.mqttClient.publish(topic, { qos: 0, retain: false }, 'update visit');
+                fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
 
               } else {
                 reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.BAD_REQUEST, message: 'ไม่พบรหัสคิวที่ต้องการ' })
@@ -247,8 +247,8 @@ const router = (fastify, { }, next) => {
             servicePointId: servicePointId
           }
 
-          fastify.mqttClient.publish(globalTopic, { qos: 0, retain: false }, 'update visit');
-          fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+          fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 

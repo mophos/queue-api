@@ -256,8 +256,8 @@ const router = (fastify, { }, next) => {
           const topic = process.env.QUEUE_CENTER_TOPIC;
           const topicServicePoint = `${topic}/${servicePointId}`;
 
-          fastify.mqttClient.publish(topic, { qos: 0, retain: false }, 'update visit');
-          fastify.mqttClient.publish(topicServicePoint, { qos: 0, retain: false }, 'update visit');
+          fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicServicePoint, 'update visit', { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
@@ -367,8 +367,8 @@ const router = (fastify, { }, next) => {
               const topic = process.env.QUEUE_CENTER_TOPIC;
               const topicServicePoint = `${topic}/${servicePointId}`;
 
-              fastify.mqttClient.publish(topic, { qos: 0, retain: false }, 'update visit');
-              fastify.mqttClient.publish(topicServicePoint, { qos: 0, retain: false }, 'update visit');
+              fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
+              fastify.mqttClient.publish(topicServicePoint, 'update visit', { qos: 0, retain: false });
 
               reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
@@ -711,8 +711,8 @@ const router = (fastify, { }, next) => {
           const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
           const topic = process.env.QUEUE_CENTER_TOPIC;
 
-          fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, 'update visit');
-          fastify.mqttClient.publish(topic, { qos: 0, retain: false }, 'update visit');
+          fastify.mqttClient.publish(servicePointTopic, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
@@ -781,8 +781,8 @@ const router = (fastify, { }, next) => {
           const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
           const topic = process.env.QUEUE_CENTER_TOPIC;
 
-          fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, 'update visit');
-          fastify.mqttClient.publish(topic, { qos: 0, retain: false }, 'update visit');
+          fastify.mqttClient.publish(servicePointTopic, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
@@ -863,9 +863,9 @@ const router = (fastify, { }, next) => {
         departmentId: departmentId
       }
 
-      fastify.mqttClient.publish(globalTopic, { qos: 0, retain: false }, 'update visit');
-      fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, JSON.stringify(payload));
-      fastify.mqttClient.publish(departmentTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
+      fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
+      fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -960,7 +960,7 @@ const router = (fastify, { }, next) => {
       // console.log(payload);
 
       // fastify.mqttClient.publish(globalTopic, 'update visit');
-      fastify.mqttClient.publish(groupTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(groupTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -1035,7 +1035,7 @@ const router = (fastify, { }, next) => {
       }
 
       // fastify.mqttClient.publish(globalTopic, 'update visit');
-      fastify.mqttClient.publish(groupTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(groupTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -1112,9 +1112,9 @@ const router = (fastify, { }, next) => {
         departmentId: departmentId
       }
 
-      fastify.mqttClient.publish(globalTopic, { qos: 0, retain: false }, 'update visit');
-      fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, JSON.stringify(payload));
-      fastify.mqttClient.publish(departmentTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
+      fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
+      fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
@@ -1148,7 +1148,7 @@ const router = (fastify, { }, next) => {
         servicePointId: servicePointId
       }
 
-      fastify.mqttClient.publish(servicePointTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 
@@ -1182,7 +1182,7 @@ const router = (fastify, { }, next) => {
         servicePointId: servicePointId
       }
 
-      fastify.mqttClient.publish(groupTopic, { qos: 0, retain: false }, JSON.stringify(payload));
+      fastify.mqttClient.publish(groupTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
 
