@@ -186,6 +186,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where('q.mark_pending', 'N')
       .where('q.date_serv', dateServ)
       .whereNot('q.is_cancel', 'Y')
@@ -206,6 +207,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where((w) => {
         w.where('q.hn', 'like', _query)
         w.orWhere('q.queue_number', 'like', _query)
@@ -228,6 +230,7 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'N')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id');
