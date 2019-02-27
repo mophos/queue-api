@@ -377,7 +377,7 @@ export class QueueModel {
 
   getWorkingHistoryGroup(db: knex, dateServ: any, servicePointId: any) {
     let sql = db('q4u_queue as q')
-      .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
+      .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
