@@ -186,6 +186,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where('q.mark_pending', 'N')
       .where('q.date_serv', dateServ)
       .whereNot('q.is_cancel', 'Y')
@@ -206,6 +207,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where((w) => {
         w.where('q.hn', 'like', _query)
         w.orWhere('q.queue_number', 'like', _query)
@@ -228,6 +230,7 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'N')
+      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id');
@@ -343,7 +346,7 @@ export class QueueModel {
   searchWorkingHistoryGroup(db: knex, dateServ: any, limit: any, offset: any,  servicePointId: any, query: any) {
     let _query = `%${query}%`;
     let sql = db('q4u_queue as q')
-      .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
+      .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
@@ -351,7 +354,7 @@ export class QueueModel {
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
-      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'qgd.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
@@ -382,7 +385,7 @@ export class QueueModel {
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
-      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .innerJoin('q4u_service_rooms as r', 'r.room_id', 'qgd.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
