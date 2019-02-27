@@ -958,8 +958,6 @@ const router = (fastify, { }, next) => {
           }
         });
 
-
-
       }
 
       // publish mqtt
@@ -1013,7 +1011,6 @@ const router = (fastify, { }, next) => {
           await queueModel.markCompleted(db, queueId);
         }
       }
-
 
       // Send notify to H4U Server
       // 
