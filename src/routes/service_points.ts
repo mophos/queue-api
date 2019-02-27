@@ -45,7 +45,7 @@ const router = (fastify, { }, next) => {
     const prefix = req.body.prefix;
     const kios = req.body.kios;
     const useOldQueue = req.body.useOldQueue || 'N';
-
+    const groupCompare = req.body.groupCompare || 'N';
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
 
@@ -57,7 +57,8 @@ const router = (fastify, { }, next) => {
       prefix: prefix,
       topic: strRnd,
       kios: kios,
-      use_old_queue: useOldQueue
+      use_old_queue: useOldQueue,
+      group_compare: groupCompare
     };
 
     try {
@@ -79,7 +80,7 @@ const router = (fastify, { }, next) => {
     const prefix = req.body.prefix;
     const kios = req.body.kios;
     const useOldQueue = req.body.useOldQueue || 'N';
-
+    const groupCompare = req.body.groupCompare || 'N';
     const rnd = new Random();
     const strRnd = rnd.integer(1111111111, 9999999999);
 
@@ -91,7 +92,8 @@ const router = (fastify, { }, next) => {
       prefix: prefix,
       topic: strRnd,
       kios: kios,
-      use_old_queue: useOldQueue
+      use_old_queue: useOldQueue,
+      group_compare: groupCompare
     };
 
     try {
