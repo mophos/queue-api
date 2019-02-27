@@ -11,10 +11,6 @@ export class EzhospModel {
             .whereIn('o.dep', localCode)
             .whereNotIn('o.vn', vn);
 
-        if (servicePointCode) {
-            sql.where('o.dep', servicePointCode);
-        }
-
         if (query) {
             var _arrQuery = query.split(' ');
             var firstName = null;
@@ -33,6 +29,10 @@ export class EzhospModel {
               return _where;
             });
       
+          } else {
+            if (servicePointCode) {
+              sql.where('o.dep', servicePointCode);
+            }
           }
 
         return sql.limit(limit)
@@ -48,10 +48,6 @@ export class EzhospModel {
             .whereIn('o.dep', localCode)
             .whereNotIn('o.vn', vn);
 
-        if (servicePointCode) {
-            sql.where('o.dep', servicePointCode);
-        }
-
         if (query) {
             var _arrQuery = query.split(' ');
             var firstName = null;
@@ -70,6 +66,10 @@ export class EzhospModel {
               return _where;
             });
       
+          } else {
+            if (servicePointCode) {
+              sql.where('o.dep', servicePointCode);
+            }
           }
 
         return sql.orderBy('o.dep', 'asc');

@@ -11,10 +11,6 @@ export class DhosModel {
             .whereIn('o.clinic_code', localCode)
             .whereNotIn('o.vn', vn);
 
-        if (servicePointCode) {
-            sql.where('o.clinic_code', servicePointCode);
-        }
-
         if (query) {
             var _arrQuery = query.split(' ');
             var firstName = null;
@@ -33,7 +29,7 @@ export class DhosModel {
               return _where;
             });
       
-          }else {
+          } else {
             if (servicePointCode) {
               sql.where('o.clinic_code', servicePointCode);
             }
@@ -51,10 +47,6 @@ export class DhosModel {
             .where('o.date_serv', dateServ)
             .whereIn('o.clinic_code', localCode)
             .whereNotIn('o.vn', vn);
-
-        if (servicePointCode) {
-            sql.where('o.clinic_code', servicePointCode);
-        }
 
         if (query) {
             var _arrQuery = query.split(' ');
