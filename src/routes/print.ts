@@ -119,7 +119,7 @@ const router = (fastify, { }, next) => {
           };
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
-          fastify.mqttClient.publish(topic, { qos: 0, retain: false }, JSON.stringify(data));
+          fastify.mqttClient.publish(topic, JSON.stringify(data), { qos: 0, retain: false });
 
         } else {
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.BAD_REQUEST, message: 'ไม่พบรหัสคิวที่ต้องการ' })
