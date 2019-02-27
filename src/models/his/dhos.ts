@@ -33,6 +33,10 @@ export class DhosModel {
               return _where;
             });
       
+          }else {
+            if (servicePointCode) {
+              sql.where('o.clinic_code', servicePointCode);
+            }
           }
 
         return sql.limit(limit)
@@ -70,6 +74,10 @@ export class DhosModel {
               return _where;
             });
       
+          }else {
+            if (servicePointCode) {
+              sql.where('o.clinic_code', servicePointCode);
+            }
           }
 
         return sql.orderBy('o.clinic_code', 'asc');
