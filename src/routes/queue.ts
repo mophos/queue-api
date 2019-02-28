@@ -810,6 +810,11 @@ const router = (fastify, { }, next) => {
       await queueModel.setQueueRoomNumber(db, queueId, roomId);
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+
+      const queueDetail = await queueModel.getDuplicatedQueueInfo(db, queueId) 
+      await queueModel.removeCurrentQueueGroup(db, servicePointId, dateServ, queueId);
+      await queueModel.updateCurrentQueueGroup(db, servicePointId, dateServ, queueId, roomId, queueDetail[0].queue_running || 0);
+
       await queueModel.markUnPending(db, queueId);
       if (isCompleted === 'N') {
         await queueModel.markInterview(db, queueId);
@@ -851,6 +856,7 @@ const router = (fastify, { }, next) => {
 
       // publish mqtt
       const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+      const groupTopic = process.env.GROUP_TOPIC + '/' + servicePointId;
       const departmentTopic = process.env.DEPARTMENT_TOPIC + '/' + departmentId;
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
       console.log(departmentTopic);
@@ -865,6 +871,7 @@ const router = (fastify, { }, next) => {
 
       fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
+      fastify.mqttClient.publish(groupTopic, JSON.stringify(payload), { qos: 0, retain: false });
       fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
