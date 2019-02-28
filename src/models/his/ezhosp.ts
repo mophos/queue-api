@@ -1,6 +1,18 @@
 import * as knex from 'knex';
 export class EzhospModel {
 
+    getPatientInfo(db: knex, cid: any) {
+      return db('patient')
+        .select('hn', 'name as first_name', 'title', 'sex', 'surname as last_name', 'birth as birthdate')
+        .where('no_card', cid).limit(1);
+    }
+
+    getPatientInfoWithHN(db: knex, hn: any) {
+      return db('patient')
+        .select('hn', 'name as first_name', 'title', 'sex', 'surname as last_name', 'birth as birthdate')
+        .where('hn', hn).limit(1);
+    }
+  
     getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
         var sql = db('view_opd_visit as o')
             .select('o.vn', 'o.hn', db.raw('o.date as date_serv'), db.raw('o.time as time_serv'),
