@@ -7,6 +7,7 @@ const request = require('request')
 
 import { QueueModel } from '../models/queue';
 import { EzhospModel } from '../models/his/ezhosp';
+import { DhosModel } from '../models/his/dhos';
 import { HiModel } from '../models/his/hi';
 import { HosxpModel } from '../models/his/hosxp';
 import { UniversalModel } from '../models/his/universal';
@@ -26,6 +27,9 @@ var hisModel: any;
 switch (hisType) {
   case 'ezhosp':
     hisModel = new EzhospModel();
+    break;
+  case 'dhos':
+    hisModel = new DhosModel();
     break;
   case 'hosxp':
     hisModel = new HosxpModel();
@@ -961,8 +965,6 @@ const router = (fastify, { }, next) => {
           }
         });
 
-
-
       }
 
       // publish mqtt
@@ -1016,7 +1018,6 @@ const router = (fastify, { }, next) => {
           await queueModel.markCompleted(db, queueId);
         }
       }
-
 
       // Send notify to H4U Server
       // 
