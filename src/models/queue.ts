@@ -369,8 +369,8 @@ export class QueueModel {
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(limit)
       .offset(offset)
-      .orderBy('q.date_update', 'desc')
-      .orderBy('q.queue_running', 'desc');
+      .orderBy('qgd.update_date', 'desc')
+      .orderBy('qgd.queue_running', 'desc');
     return sql;
 
   }
@@ -393,8 +393,8 @@ export class QueueModel {
       .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(10)
-      .orderBy('q.date_update', 'desc')
-      .orderBy('q.queue_running', 'desc');
+      .orderBy('qgd.update_date', 'desc')
+      .orderBy('qgd.queue_running', 'desc');
     return sql;
   }
 
@@ -412,8 +412,6 @@ export class QueueModel {
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
-      .orderBy('q.date_update', 'desc')
-      .orderBy('q.queue_running', 'desc');
     return sql;
   }
 

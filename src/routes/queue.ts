@@ -815,7 +815,7 @@ const router = (fastify, { }, next) => {
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
 
-      const queueDetail = await queueModel.getDuplicatedQueueInfo(db, queueId) 
+      const queueDetail = await queueModel.getDuplicatedQueueInfo(db, queueId) // get queue_running
       await queueModel.removeCurrentQueueGroup(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueueGroup(db, servicePointId, dateServ, queueId, roomId, queueDetail[0].queue_running || 0);
 
