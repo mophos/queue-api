@@ -49,3 +49,4 @@ LOCAL_NOTIFY_HTTP_PORT=8888
 QUEUE_CENTER_TOPIC=queue/center
 SERVICE_POINT_TOPIC=queue/service-point
 DEPARTMENT_TOPIC=queue/department
+GROUP_TOPIC=queue/group
