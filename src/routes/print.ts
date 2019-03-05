@@ -2,7 +2,6 @@
 
 import * as knex from 'knex';
 import * as fastify from 'fastify';
-import * as path from 'path';
 import * as moment from 'moment';
 
 import * as HttpStatus from 'http-status-codes';
@@ -78,6 +77,7 @@ const router = (fastify, { }, next) => {
   fastify.post('/queue/prepare/print', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const queueId: any = req.body.queueId;
     const topic = req.body.topic;
+    const printSmallQueue = req.body.printSmallQueue || 'N';
 
     if (queueId && topic) {
       try {
@@ -106,6 +106,7 @@ const router = (fastify, { }, next) => {
           const qrcode = `${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`;
 
           var data: any = {
+            "printSmallQueue": printSmallQueue,
             "hn": hn,
             "firstName": firstName,
             "lastName": lastName,
