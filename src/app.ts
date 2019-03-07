@@ -95,24 +95,47 @@ app.register(require('./plugins/db'), {
 
 if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql' || process.env.DBHIS_TYPE === 'oracledb') {
 
-  app.register(require('./plugins/db'), {
-    connection: {
-      client: process.env.DBHIS_TYPE,
+  if (process.env.DBHIS_TYPE === 'pg') {
+    app.register(require('./plugins/db'), {
       connection: {
-        host: process.env.DBHIS_HOST,
-        user: process.env.DBHIS_USER,
-        port: +process.env.DBHIS_PORT,
-        password: process.env.DBHIS_PASSWORD,
-        database: process.env.DBHIS_NAME,
+        client: process.env.DBHIS_TYPE,
+        connection: {
+          host: process.env.DBHIS_HOST,
+          user: process.env.DBHIS_USER,
+          port: +process.env.DBHIS_PORT,
+          password: process.env.DBHIS_PASSWORD,
+          database: process.env.DBHIS_NAME,
+        },
+        searchPath: ['public'],
+        pool: {
+          min: 0,
+          max: 7
+        },
+        debug: false,
       },
-      pool: {
-        min: 0,
-        max: 7
+
+      connectionName: 'dbHIS'
+    });
+  } else {
+    app.register(require('./plugins/db'), {
+      connection: {
+        client: process.env.DBHIS_TYPE,
+        connection: {
+          host: process.env.DBHIS_HOST,
+          user: process.env.DBHIS_USER,
+          port: +process.env.DBHIS_PORT,
+          password: process.env.DBHIS_PASSWORD,
+          database: process.env.DBHIS_NAME,
+        },
+        pool: {
+          min: 0,
+          max: 7
+        },
+        debug: false,
       },
-      debug: false,
-    },
-    connectionName: 'dbHIS'
-  });
+      connectionName: 'dbHIS'
+    });
+  }
 
 } else {
   app.register(require('./plugins/db'), {
