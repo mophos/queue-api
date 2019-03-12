@@ -14,11 +14,16 @@ export class QueueModel {
     ]);
   }
 
-  updateServicePointQueueNumber(db: knex, servicePointId, dateServ) {
-    return db('q4u_queue_number')
+  updateServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var sql = db('q4u_queue_number')
       .where('service_point_id', servicePointId)
-      .where('date_serv', dateServ)
-      .increment('current_queue', 1);
+      .where('date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('priority_id', priorityId);
+    }
+
+    return sql.increment('current_queue', 1);
   }
 
   updateServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
@@ -60,39 +65,49 @@ export class QueueModel {
       });
   }
 
-  createServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any) {
+  createServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var data: any = {};
+    data.service_point_id = servicePointId;
+    data.date_serv = dateServ;
+    data.current_queue = 1;
+
+    if (priorityId) {
+      data.priority_id = priorityId;
+    }
+
     return db('q4u_queue_number')
-      .insert({
-        service_point_id: servicePointId,
-        date_serv: dateServ,
-        current_queue: 1
-      });
+      .insert(data);
   }
 
-  createServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
-    return db('q4u_queue_number')
-      .insert({
-        service_point_id: servicePointId,
-        date_serv: dateServ,
-        current_queue: 1,
-        priority_id: priorityId
-      });
-  }
+  // createServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
+  //   return db('q4u_queue_number')
+  //     .insert({
+  //       service_point_id: servicePointId,
+  //       date_serv: dateServ,
+  //       current_queue: 1,
+  //       priority_id: priorityId
+  //     });
+  // }
 
-  checkServicePointQueueNumber(db: knex, servicePointId, dateServ) {
-    return db('q4u_queue_number')
+  checkServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var sql = db('q4u_queue_number')
       .where('service_point_id', servicePointId)
-      .where('date_serv', dateServ)
-      .limit(1);
+      .where('date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('priority_id', priorityId);
+    }
+
+    return sql.limit(1);
   }
 
-  checkServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
-    return db('q4u_queue_number')
-      .where('service_point_id', servicePointId)
-      .where('date_serv', dateServ)
-      .where('priority_id', priorityId)
-      .limit(1);
-  }
+  // checkServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
+  //   return db('q4u_queue_number')
+  //     .where('service_point_id', servicePointId)
+  //     .where('date_serv', dateServ)
+  //     .where('priority_id', priorityId)
+  //     .limit(1);
+  // }
 
   createQueueInfo(db: knex, qData: any) {
 
@@ -112,13 +127,13 @@ export class QueueModel {
       }, 'queue_id');
   }
 
-  checkDuplicatedQueue(db: knex, hn: any, vn: any, servicePointId: any) {
-    return db('q4u_queue')
-      .select(db.raw('count(*) as total'))
-      .where('service_point_id', servicePointId)
-      .where('hn', hn)
-      .where('vn', vn);
-  }
+  // checkDuplicatedQueue(db: knex, hn: any, vn: any, servicePointId: any) {
+  //   return db('q4u_queue')
+  //     .select(db.raw('count(*) as total'))
+  //     .where('service_point_id', servicePointId)
+  //     .where('hn', hn)
+  //     .where('vn', vn);
+  // }
 
   searchQueueByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any, query: any) {
     let _query = `%${query}%`;
