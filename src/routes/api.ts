@@ -67,20 +67,33 @@ const router = (fastify, { }, next) => {
               const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || 'T';
               const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
               const prefixPoint: any = rsPointPrefix[0].prefix || 'T';
+
+              const usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
+
               await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
               var queueNumber = 0;
               var queueInterview = 0;
 
-              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
               var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
-              // queue number
+              var rs1: any;
+
+              if (usePriorityQueueRunning === 'Y') {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+              } else {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              }
+
               if (rs1.length) {
                 queueNumber = rs1[0]['current_queue'] + 1;
-                await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
               } else {
                 queueNumber = 1;
-                await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
               }
 
               // queue interview
@@ -109,7 +122,9 @@ const router = (fastify, { }, next) => {
               if (process.env.USE_PRIORITY_PREFIX === 'Y') {
                 strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
               } else {
-                strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+                strQueueNumber = usePriorityQueueRunning === 'Y'
+                  ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+                  : `${prefixPoint} ${_queueNumber}`;
               }
 
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
