@@ -454,13 +454,15 @@ const router = (fastify, { }, next) => {
   fastify.get('/waiting-group/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
+    const priorityId = req.query.priorityId || null;
+
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
-      const rs: any = await queueModel.getWaitingGroupList(db, dateServ, servicePointId, limit, offset);
-      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId);
+      const rs: any = await queueModel.getWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset);
+      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
       fastify.log.error(error);
@@ -471,6 +473,8 @@ const router = (fastify, { }, next) => {
   fastify.get('/waiting-group/search/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
+    const priorityId = +req.query.priorityId || null;
+
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
     const query = req.query.query || ''
@@ -478,8 +482,8 @@ const router = (fastify, { }, next) => {
       console.log(query);
 
       const dateServ: any = moment().format('YYYY-MM-DD');
-      const rs: any = await queueModel.searchWaitingGroupList(db, dateServ, servicePointId, limit, offset, query);
-      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId);
+      const rs: any = await queueModel.searchWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset, query);
+      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
       fastify.log.error(error);
@@ -983,7 +987,6 @@ const router = (fastify, { }, next) => {
         const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
 
         if (rsQueue.length) {
-
 
           rsQueue.forEach((v: any) => {
             const data = v;

@@ -216,8 +216,8 @@ export class QueueModel {
     // .whereNull('q.room_id');
   }
 
-  getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
-    return db('q4u_queue as q')
+  getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any) {
+    var sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -228,17 +228,22 @@ export class QueueModel {
       .whereNull('q.room_id')
       .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where('q.mark_pending', 'N')
-      .where('q.date_serv', dateServ)
-      .whereNot('q.is_cancel', 'Y')
+      .where('q.date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(limit)
       .offset(offset);
   }
 
-  searchWaitingGroupList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any, query: string) {
+  searchWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any, query: string) {
     let _query = `%${query}%`;
-    return db('q4u_queue as q')
+    var sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -253,8 +258,13 @@ export class QueueModel {
         w.orWhere('q.queue_number', 'like', _query)
         w.orWhere('p.first_name', 'like', _query)
         w.orWhere('p.last_name', 'like', _query)
-      })
-      .where('q.mark_pending', 'N')
+      });
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.where('q.mark_pending', 'N')
       .where('q.date_serv', dateServ)
       .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
@@ -263,8 +273,8 @@ export class QueueModel {
       .offset(offset);
   }
 
-  getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any) {
-    return db('q4u_queue as q')
+  getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any, priorityId: any) {
+    var sql = db('q4u_queue as q')
       .select(db.raw('count(*) as total'))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -272,8 +282,13 @@ export class QueueModel {
       .where('q.mark_pending', 'N')
       .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .whereNot('q.is_cancel', 'Y')
-      .where('q.date_serv', dateServ)
-      .whereNull('q.room_id');
+      .where('q.date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.whereNull('q.room_id');
   }
 
   getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
