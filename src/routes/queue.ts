@@ -183,6 +183,7 @@ const router = (fastify, { }, next) => {
           var queueNumber = 0;
           var queueInterview = 0;
 
+          var usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
           var useHISQueue = process.env.USE_HIS_QUEUE || 'N';
 
           var _queueRunning = 0;
@@ -197,14 +198,24 @@ const router = (fastify, { }, next) => {
             }
           } else {
             // queue number
-            var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+            var rs1: any;
+
+            if (usePriorityQueueRunning === 'Y') {
+              rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+            } else {
+              rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+            }
 
             if (rs1.length) {
               queueNumber = rs1[0]['current_queue'] + 1;
-              await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+              usePriorityQueueRunning === 'Y'
+                ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
             } else {
               queueNumber = 1;
-              await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+              usePriorityQueueRunning === 'Y'
+                ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
             }
 
             _queueRunning = queueNumber;
@@ -223,9 +234,10 @@ const router = (fastify, { }, next) => {
             if (process.env.USE_PRIORITY_PREFIX === 'Y') {
               strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
             } else {
-              strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+              strQueueNumber = usePriorityQueueRunning === 'Y'
+                ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+                : `${prefixPoint} ${_queueNumber}`;
             }
-
 
           }
 
@@ -308,22 +320,35 @@ const router = (fastify, { }, next) => {
               const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
               const prefixPoint: any = rsPointPrefix[0].prefix || '0';
 
+              const usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
+
               await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
               var queueNumber = 0;
               var queueInterview = 0;
 
-              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
-              var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+              var rs1: any;
 
-              // queue number
+              if (usePriorityQueueRunning === 'Y') {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+              } else {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              }
+
               if (rs1.length) {
                 queueNumber = rs1[0]['current_queue'] + 1;
-                await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
               } else {
                 queueNumber = 1;
-                await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
               }
+
               // queue interview
+              var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+
               if (rs2.length) {
                 queueInterview = rs2[0]['current_queue'] + 1;
                 await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
@@ -348,7 +373,9 @@ const router = (fastify, { }, next) => {
               if (process.env.USE_PRIORITY_PREFIX === 'Y') {
                 strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
               } else {
-                strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+                strQueueNumber = usePriorityQueueRunning === 'Y'
+                  ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+                  : `${prefixPoint} ${_queueNumber}`;
               }
 
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -423,16 +450,19 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
   })
+
   fastify.get('/waiting-group/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
+    const priorityId = req.query.priorityId || null;
+
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
-      const rs: any = await queueModel.getWaitingGroupList(db, dateServ, servicePointId, limit, offset);
-      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId);
+      const rs: any = await queueModel.getWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset);
+      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
       fastify.log.error(error);
@@ -443,6 +473,8 @@ const router = (fastify, { }, next) => {
   fastify.get('/waiting-group/search/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
+    const priorityId = +req.query.priorityId || null;
+
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
     const query = req.query.query || ''
@@ -450,8 +482,8 @@ const router = (fastify, { }, next) => {
       console.log(query);
 
       const dateServ: any = moment().format('YYYY-MM-DD');
-      const rs: any = await queueModel.searchWaitingGroupList(db, dateServ, servicePointId, limit, offset, query);
-      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId);
+      const rs: any = await queueModel.searchWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset, query);
+      const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
       fastify.log.error(error);
@@ -664,6 +696,7 @@ const router = (fastify, { }, next) => {
         const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || '0';
         const rsServicePoint: any = await servicePointModel.getPrefix(db, servicePointId);
         const prefixPoint: any = rsServicePoint[0].prefix || '0';
+        const usePriorityQueueRunning = rsServicePoint[0].priority_queue_running || 'N';
 
         const useOldQueue: any = rsServicePoint[0].use_old_queue || 'N';
 
@@ -726,16 +759,27 @@ const router = (fastify, { }, next) => {
           var newQueueId = null;
           var queueInterview = 0;
 
-          var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
-          var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+          var rs1: any;
+
+          if (usePriorityQueueRunning === 'Y') {
+            rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+          } else {
+            rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+          }
 
           if (rs1.length) {
             queueNumber = rs1[0]['current_queue'] + 1;
-            await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+            usePriorityQueueRunning === 'Y'
+              ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+              : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
           } else {
             queueNumber = 1;
-            await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+            usePriorityQueueRunning === 'Y'
+              ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+              : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
           }
+
+          var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
           // queue interview
           if (rs2.length) {
@@ -762,7 +806,9 @@ const router = (fastify, { }, next) => {
           if (process.env.USE_PRIORITY_PREFIX === 'Y') {
             strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
           } else {
-            strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+            strQueueNumber = usePriorityQueueRunning === 'Y'
+              ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+              : `${prefixPoint} ${_queueNumber}`;
           }
 
           const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -892,17 +938,19 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const roomNumber = req.body.roomNumber;
-    let queue = req.body.queue;
+    var queues = req.body.queue;
     const isCompleted = req.body.isCompleted;
     // const queueRunning = req.body.queueRunning;
 
-    let queueIds: any = []
-    let queueData: any = []
-    let queueNumber: any = []
+    let queueIds: any = [];
+    let queueData: any = [];
+    let queueNumber: any = [];
+
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
-      queue = Array.isArray(queue) ? queue : [queue];
-      queue.forEach(v => {
+      var _queues = Array.isArray(queues) ? queues : [queues];
+
+      _queues.forEach((v: any) => {
         queueIds.push(v.queue_id)
         queueData.push({
           service_point_id: servicePointId,
@@ -910,17 +958,17 @@ const router = (fastify, { }, next) => {
           queue_id: v.queue_id,
           room_id: roomId,
           queue_running: v.queue_running
-        })
+        });
+
         queueNumber.push(v.queue_number);
       });
 
-
-      await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, queueIds);
+      await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, roomId);
       await queueModel.updateCurrentQueueGroups(db, queueData);
 
       const rsServicePoint: any = await servicePointModel.getPrefix(db, servicePointId);
-
       const groupCompare: any = rsServicePoint[0].group_compare || 'N';
+
       if (groupCompare === 'Y') {
         await queueModel.setQueueGroupRoomNumber(db, queueIds, roomId);
         await queueModel.markUnPendingGroup(db, queueIds);
@@ -932,16 +980,16 @@ const router = (fastify, { }, next) => {
         }
       }
 
-
       // Send notify to H4U Server
 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-        queueIds.forEach(async (v: any) => {
-          const rsQueue: any = await queueModel.getResponseQueueInfo(db, v.queue_id);
-          // console.log(rsQueue[0]);
-          if (rsQueue[0].length) {
-            const data = rsQueue[0][0];
+        const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
+
+        if (rsQueue.length) {
+
+          rsQueue.forEach((v: any) => {
+            const data = v;
             const queueWithoutPrefix = +data.queue_running;
 
             const params = {
@@ -955,6 +1003,8 @@ const router = (fastify, { }, next) => {
               dateServ: moment(data.date_serv).format('YYYYMMDD'),
             };
 
+            console.log(params);
+
             request.post(process.env.Q4U_NOTIFY_URL, {
               form: params
             }, (err: any, res: any, body: any) => {
@@ -962,8 +1012,9 @@ const router = (fastify, { }, next) => {
               console.log(body);
             });
 
-          }
-        });
+          });
+
+        }
 
       }
 

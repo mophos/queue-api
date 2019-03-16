@@ -3,6 +3,7 @@
 import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as moment from 'moment';
+import * as HttpStatus from 'http-status-codes';
 const request = require('request')
 
 import { QueueModel } from '../models/queue';
@@ -14,7 +15,6 @@ const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
 
-import * as HttpStatus from 'http-status-codes';
 const tokenModel = new TokenModel();
 
 const router = (fastify, { }, next) => {
@@ -67,20 +67,33 @@ const router = (fastify, { }, next) => {
               const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || 'T';
               const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
               const prefixPoint: any = rsPointPrefix[0].prefix || 'T';
+
+              const usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
+
               await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
               var queueNumber = 0;
               var queueInterview = 0;
 
-              var rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
               var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
-              // queue number
+              var rs1: any;
+
+              if (usePriorityQueueRunning === 'Y') {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+              } else {
+                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+              }
+
               if (rs1.length) {
                 queueNumber = rs1[0]['current_queue'] + 1;
-                await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
               } else {
                 queueNumber = 1;
-                await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+                usePriorityQueueRunning === 'Y'
+                  ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                  : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
               }
 
               // queue interview
@@ -109,7 +122,9 @@ const router = (fastify, { }, next) => {
               if (process.env.USE_PRIORITY_PREFIX === 'Y') {
                 strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
               } else {
-                strQueueNumber = `${prefixPoint} ${_queueNumber}`;
+                strQueueNumber = usePriorityQueueRunning === 'Y'
+                  ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+                  : `${prefixPoint} ${_queueNumber}`;
               }
 
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -247,10 +262,11 @@ const router = (fastify, { }, next) => {
             servicePointId: servicePointId
           }
 
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
           fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
           fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
         } else {
           reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -273,6 +289,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  // get patient current queue
   fastify.get('/queue', async (req: fastify.Request, reply: fastify.Reply) => {
     const token = req.query.token;
     const hn = req.query.hn;
@@ -294,6 +311,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบ TOKEN' })
     }
   });
+
   next();
 }
 

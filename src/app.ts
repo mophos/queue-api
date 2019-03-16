@@ -95,24 +95,47 @@ app.register(require('./plugins/db'), {
 
 if (process.env.DBHIS_TYPE === 'pg' || process.env.DBHIS_TYPE === 'mssql' || process.env.DBHIS_TYPE === 'oracledb') {
 
-  app.register(require('./plugins/db'), {
-    connection: {
-      client: process.env.DBHIS_TYPE,
+  if (process.env.DBHIS_TYPE === 'pg') {
+    app.register(require('./plugins/db'), {
       connection: {
-        host: process.env.DBHIS_HOST,
-        user: process.env.DBHIS_USER,
-        port: +process.env.DBHIS_PORT,
-        password: process.env.DBHIS_PASSWORD,
-        database: process.env.DBHIS_NAME,
+        client: process.env.DBHIS_TYPE,
+        connection: {
+          host: process.env.DBHIS_HOST,
+          user: process.env.DBHIS_USER,
+          port: +process.env.DBHIS_PORT,
+          password: process.env.DBHIS_PASSWORD,
+          database: process.env.DBHIS_NAME,
+        },
+        searchPath: ['public'],
+        pool: {
+          min: 0,
+          max: 7
+        },
+        debug: false,
       },
-      pool: {
-        min: 0,
-        max: 7
+
+      connectionName: 'dbHIS'
+    });
+  } else {
+    app.register(require('./plugins/db'), {
+      connection: {
+        client: process.env.DBHIS_TYPE,
+        connection: {
+          host: process.env.DBHIS_HOST,
+          user: process.env.DBHIS_USER,
+          port: +process.env.DBHIS_PORT,
+          password: process.env.DBHIS_PASSWORD,
+          database: process.env.DBHIS_NAME,
+        },
+        pool: {
+          min: 0,
+          max: 7
+        },
+        debug: false,
       },
-      debug: false,
-    },
-    connectionName: 'dbHIS'
-  });
+      connectionName: 'dbHIS'
+    });
+  }
 
 } else {
   app.register(require('./plugins/db'), {
@@ -177,7 +200,7 @@ app.register(require('./routes/departments'), { prefix: '/v1/departments', logge
 app.register(require('./routes/print'), { prefix: '/v1/print', logger: true });
 
 app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
-  reply.code(200).send({ message: 'Welcome to Q4U API services!', version: '2.0.0 build 20190229-1' })
+  reply.code(200).send({ message: 'Welcome to Q4U API services!', version: '2.0.1 build 20190311-1' })
 });
 
 const port = 3002;

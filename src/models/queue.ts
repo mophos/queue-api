@@ -14,7 +14,19 @@ export class QueueModel {
     ]);
   }
 
-  updateServicePointQueueNumber(db: knex, servicePointId, dateServ) {
+  updateServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var sql = db('q4u_queue_number')
+      .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('priority_id', priorityId);
+    }
+
+    return sql.increment('current_queue', 1);
+  }
+
+  updateServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
     return db('q4u_queue_number')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
@@ -53,21 +65,49 @@ export class QueueModel {
       });
   }
 
-  createServicePointQueueNumber(db: knex, servicePointId, dateServ) {
+  createServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var data: any = {};
+    data.service_point_id = servicePointId;
+    data.date_serv = dateServ;
+    data.current_queue = 1;
+
+    if (priorityId) {
+      data.priority_id = priorityId;
+    }
+
     return db('q4u_queue_number')
-      .insert({
-        service_point_id: servicePointId,
-        date_serv: dateServ,
-        current_queue: 1
-      });
+      .insert(data);
   }
 
-  checkServicePointQueueNumber(db: knex, servicePointId, dateServ) {
-    return db('q4u_queue_number')
+  // createServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
+  //   return db('q4u_queue_number')
+  //     .insert({
+  //       service_point_id: servicePointId,
+  //       date_serv: dateServ,
+  //       current_queue: 1,
+  //       priority_id: priorityId
+  //     });
+  // }
+
+  checkServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
+    var sql = db('q4u_queue_number')
       .where('service_point_id', servicePointId)
-      .where('date_serv', dateServ)
-      .limit(1);
+      .where('date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('priority_id', priorityId);
+    }
+
+    return sql.limit(1);
   }
+
+  // checkServicePointQueueNumberWithPriority(db: knex, servicePointId: any, dateServ: any, priorityId: any) {
+  //   return db('q4u_queue_number')
+  //     .where('service_point_id', servicePointId)
+  //     .where('date_serv', dateServ)
+  //     .where('priority_id', priorityId)
+  //     .limit(1);
+  // }
 
   createQueueInfo(db: knex, qData: any) {
 
@@ -87,13 +127,13 @@ export class QueueModel {
       }, 'queue_id');
   }
 
-  checkDuplicatedQueue(db: knex, hn: any, vn: any, servicePointId: any) {
-    return db('q4u_queue')
-      .select(db.raw('count(*) as total'))
-      .where('service_point_id', servicePointId)
-      .where('hn', hn)
-      .where('vn', vn);
-  }
+  // checkDuplicatedQueue(db: knex, hn: any, vn: any, servicePointId: any) {
+  //   return db('q4u_queue')
+  //     .select(db.raw('count(*) as total'))
+  //     .where('service_point_id', servicePointId)
+  //     .where('hn', hn)
+  //     .where('vn', vn);
+  // }
 
   searchQueueByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any, query: any) {
     let _query = `%${query}%`;
@@ -176,8 +216,8 @@ export class QueueModel {
     // .whereNull('q.room_id');
   }
 
-  getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
-    return db('q4u_queue as q')
+  getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any) {
+    var sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -186,19 +226,24 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
-      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
+      .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where('q.mark_pending', 'N')
-      .where('q.date_serv', dateServ)
-      .whereNot('q.is_cancel', 'Y')
+      .where('q.date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(limit)
       .offset(offset);
   }
 
-  searchWaitingGroupList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any, query: string) {
+  searchWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any, query: string) {
     let _query = `%${query}%`;
-    return db('q4u_queue as q')
+    var sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -207,14 +252,19 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
       .whereNull('q.room_id')
-      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
+      .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where((w) => {
         w.where('q.hn', 'like', _query)
         w.orWhere('q.queue_number', 'like', _query)
         w.orWhere('p.first_name', 'like', _query)
         w.orWhere('p.last_name', 'like', _query)
-      })
-      .where('q.mark_pending', 'N')
+      });
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.where('q.mark_pending', 'N')
       .where('q.date_serv', dateServ)
       .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
@@ -223,17 +273,22 @@ export class QueueModel {
       .offset(offset);
   }
 
-  getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any) {
-    return db('q4u_queue as q')
+  getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any, priorityId: any) {
+    var sql = db('q4u_queue as q')
       .select(db.raw('count(*) as total'))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'N')
-      .whereNotIn('q.queue_id',db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
+      .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .whereNot('q.is_cancel', 'Y')
-      .where('q.date_serv', dateServ)
-      .whereNull('q.room_id');
+      .where('q.date_serv', dateServ);
+
+    if (priorityId) {
+      sql.where('q.priority_id', priorityId);
+    }
+
+    return sql.whereNull('q.room_id');
   }
 
   getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
@@ -288,7 +343,7 @@ export class QueueModel {
   getWorkingGroup(db: knex, dateServ: any, servicePointId: any) {
     return db('q4u_queue_group_detail as qd')
       .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
-        'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
@@ -300,7 +355,7 @@ export class QueueModel {
       .where('qd.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
-      .where('qd.update_date', db('q4u_queue_group_detail').select('update_date').where('date_serv', dateServ).where('service_point_id', servicePointId).orderBy('update_date','desc').limit(1))
+      .where('qd.update_date', db('q4u_queue_group_detail').select('update_date').where('date_serv', dateServ).where('service_point_id', servicePointId).orderBy('update_date', 'desc').limit(1))
       // .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
       .orderBy('q.date_update', 'desc')
       .orderBy('q.queue_running');
@@ -343,17 +398,17 @@ export class QueueModel {
       .orderBy('q.queue_id', 'desc');
   }
 
-  searchWorkingHistoryGroup(db: knex, dateServ: any, limit: any, offset: any,  servicePointId: any, query: any) {
+  searchWorkingHistoryGroup(db: knex, dateServ: any, limit: any, offset: any, servicePointId: any, query: any) {
     let _query = `%${query}%`;
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
-        'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
-      .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
+      .innerJoin('q4u_queue_group_detail as qgd', 'qgd.queue_id', 'q.queue_id')
       .innerJoin('q4u_service_rooms as r', 'r.room_id', 'qgd.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
@@ -378,13 +433,13 @@ export class QueueModel {
   getWorkingHistoryGroup(db: knex, dateServ: any, servicePointId: any) {
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
-        'q.queue_number','q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
+        'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
-      .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
+      .innerJoin('q4u_queue_group_detail as qgd', 'qgd.queue_id', 'q.queue_id')
       .innerJoin('q4u_service_rooms as r', 'r.room_id', 'qgd.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
@@ -400,18 +455,18 @@ export class QueueModel {
 
   getWorkingHistoryGroupTotal(db: knex, dateServ: any, servicePointId: any) {
     let sql = db('q4u_queue as q')
-    .select(db.raw('count(q.queue_id) as total'))
+      .select(db.raw('count(q.queue_id) as total'))
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       // .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       // .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
-      .innerJoin('q4u_queue_group_detail as qgd','qgd.queue_id','q.queue_id')
+      .innerJoin('q4u_queue_group_detail as qgd', 'qgd.queue_id', 'q.queue_id')
       // .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
       // .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
-      // .groupByRaw('qd.date_serv, qd.service_point_id')
+    // .groupByRaw('qd.date_serv, qd.service_point_id')
     return sql;
   }
 
@@ -524,30 +579,9 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueRunning, queueId]);
   }
 
-  updateCurrentQueueGroups(db: knex, queue) {
-    var questionMarks = "";
-    var values = [];
-    queue.forEach(function(value, index){
-      questionMarks += "("
-      Object.keys(value).forEach(function(x){
-           questionMarks += "?, ";
-           values.push(value[x]);
-      });
-      questionMarks = questionMarks.substr(0, questionMarks.length - 2);
-      questionMarks += "), ";
-  });
-  questionMarks = questionMarks.substr(0, questionMarks.length - 2);
-    var sql = 'INSERT INTO q4u_queue_group_detail (`service_point_id`, `date_serv`, `queue_id`, `room_id`, `queue_running`) VALUES '+questionMarks+' ON DUPLICATE KEY UPDATE queue_id = VALUES(`queue_id`)';
-    return db.raw(sql, values);
+  updateCurrentQueueGroups(db: knex, queues: any) {
+    return db('q4u_queue_group_detail').insert(queues);
   }
-  
-  // changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
-  //   return db('q4u_queue_detail')
-  //     .where('service_point_id', servicePointId)
-  //     .where('date_serv', dateServ)
-  //     .where('queue_id', queueId)
-  //     .update('room_id', roomId);
-  // }
 
   removeCurrentQueue(db: knex, servicePointId, dateServ, queueId) {
     return db('q4u_queue_detail')
@@ -565,11 +599,11 @@ export class QueueModel {
       .del();
   }
 
-  removeCurrentQueueGroups(db: knex, servicePointId, dateServ, queueId) {
+  removeCurrentQueueGroups(db: knex, servicePointId, dateServ, roomId) {
     return db('q4u_queue_group_detail')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
-      .whereIn('queue_id', queueId)
+      .where('room_id', roomId)
       .del();
   }
 
@@ -643,23 +677,21 @@ export class QueueModel {
     return db.raw(sql, [queueId, queueId]);
   }
 
-  getResponseQueueInfo(db: knex, queueId: any) {
-    const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_interview, q.queue_running, q.date_serv,
-    sp.service_point_name, sp.local_code as service_point_code, q.date_create,sp.department_id,
-    (select hosname from q4u_system limit 1) as hosname,
-    (select hoscode from q4u_system limit 1) as hosid,
-    (
-      select count(*) from q4u_queue where queue_id<? and room_id is null 
-      and service_point_id=q.service_point_id and date_serv=q.date_serv
-    ) as remain_queue, p.priority_name, r.room_name, r.room_number
-    from q4u_queue as q 
-    inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
-    left join q4u_priorities as p on p.priority_id=q.priority_id
-    left join q4u_service_rooms as r on r.room_id=q.room_id
-    where q.queue_id=?
-    `;
-    return db.raw(sql, [queueId, queueId]);
+  getResponseQueueInfo(db: knex, queueIds: any[]) {
+
+    var sqlHospname = db('q4u_system').select('hosname').as('hosname');
+    var sqlHoscode = db('q4u_system').select('hoscode').as('hosid');
+
+    return db('q4u_queue as q')
+      .select('q.hn', 'q.vn', 'q.queue_id', 'q.queue_number', 'q.queue_interview', 'q.queue_running', 'q.date_serv',
+        'sp.service_point_name', 'sp.local_code as service_point_code',
+        'q.date_create', 'sp.department_id', 'p.priority_name', 'r.room_name', 'r.room_number',
+        sqlHoscode, sqlHospname)
+      .innerJoin('q4u_queue_group_detail as qg', 'qg.queue_id', 'q.queue_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .leftJoin('q4u_priorities as p', 'p.priority_id', 'q.priority_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'qg.room_id')
+      .whereIn('q.queue_id', queueIds);
   }
 
   apiGetCurrentQueueByHN(db: knex, hn: any, servicePointId: any) {
