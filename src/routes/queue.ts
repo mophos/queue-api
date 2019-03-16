@@ -450,6 +450,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
   })
+
   fastify.get('/waiting-group/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
@@ -933,17 +934,19 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const roomNumber = req.body.roomNumber;
-    let queue = req.body.queue;
+    var queues = req.body.queue;
     const isCompleted = req.body.isCompleted;
     // const queueRunning = req.body.queueRunning;
 
-    let queueIds: any = []
-    let queueData: any = []
-    let queueNumber: any = []
+    let queueIds: any = [];
+    let queueData: any = [];
+    let queueNumber: any = [];
+
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
-      queue = Array.isArray(queue) ? queue : [queue];
-      queue.forEach((v: any) => {
+      var _queues = Array.isArray(queues) ? queues : [queues];
+
+      _queues.forEach((v: any) => {
         queueIds.push(v.queue_id)
         queueData.push({
           service_point_id: servicePointId,
@@ -951,16 +954,17 @@ const router = (fastify, { }, next) => {
           queue_id: v.queue_id,
           room_id: roomId,
           queue_running: v.queue_running
-        })
+        });
+
         queueNumber.push(v.queue_number);
       });
 
-      await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, queueIds);
+      await queueModel.removeCurrentQueueGroups(db, servicePointId, dateServ, roomId);
       await queueModel.updateCurrentQueueGroups(db, queueData);
 
       const rsServicePoint: any = await servicePointModel.getPrefix(db, servicePointId);
-
       const groupCompare: any = rsServicePoint[0].group_compare || 'N';
+
       if (groupCompare === 'Y') {
         await queueModel.setQueueGroupRoomNumber(db, queueIds, roomId);
         await queueModel.markUnPendingGroup(db, queueIds);
@@ -972,16 +976,17 @@ const router = (fastify, { }, next) => {
         }
       }
 
-
       // Send notify to H4U Server
 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-        queueIds.forEach(async (v: any) => {
-          const rsQueue: any = await queueModel.getResponseQueueInfo(db, v.queue_id);
-          // console.log(rsQueue[0]);
-          if (rsQueue[0].length) {
-            const data = rsQueue[0][0];
+        const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
+
+        if (rsQueue.length) {
+
+
+          rsQueue.forEach((v: any) => {
+            const data = v;
             const queueWithoutPrefix = +data.queue_running;
 
             const params = {
@@ -995,6 +1000,8 @@ const router = (fastify, { }, next) => {
               dateServ: moment(data.date_serv).format('YYYYMMDD'),
             };
 
+            console.log(params);
+
             request.post(process.env.Q4U_NOTIFY_URL, {
               form: params
             }, (err: any, res: any, body: any) => {
@@ -1002,8 +1009,9 @@ const router = (fastify, { }, next) => {
               console.log(body);
             });
 
-          }
-        });
+          });
+
+        }
 
       }
 

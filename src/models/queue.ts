@@ -564,30 +564,9 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueRunning, queueId]);
   }
 
-  updateCurrentQueueGroups(db: knex, queue) {
-    var questionMarks = "";
-    var values = [];
-    queue.forEach(function (value, index) {
-      questionMarks += "("
-      Object.keys(value).forEach(function (x) {
-        questionMarks += "?, ";
-        values.push(value[x]);
-      });
-      questionMarks = questionMarks.substr(0, questionMarks.length - 2);
-      questionMarks += "), ";
-    });
-    questionMarks = questionMarks.substr(0, questionMarks.length - 2);
-    var sql = 'INSERT INTO q4u_queue_group_detail (`service_point_id`, `date_serv`, `queue_id`, `room_id`, `queue_running`) VALUES ' + questionMarks + ' ON DUPLICATE KEY UPDATE queue_id = VALUES(`queue_id`)';
-    return db.raw(sql, values);
+  updateCurrentQueueGroups(db: knex, queues: any) {
+    return db('q4u_queue_group_detail').insert(queues);
   }
-
-  // changeCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
-  //   return db('q4u_queue_detail')
-  //     .where('service_point_id', servicePointId)
-  //     .where('date_serv', dateServ)
-  //     .where('queue_id', queueId)
-  //     .update('room_id', roomId);
-  // }
 
   removeCurrentQueue(db: knex, servicePointId, dateServ, queueId) {
     return db('q4u_queue_detail')
@@ -605,11 +584,11 @@ export class QueueModel {
       .del();
   }
 
-  removeCurrentQueueGroups(db: knex, servicePointId, dateServ, queueId) {
+  removeCurrentQueueGroups(db: knex, servicePointId, dateServ, roomId) {
     return db('q4u_queue_group_detail')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
-      .whereIn('queue_id', queueId)
+      .where('room_id', roomId)
       .del();
   }
 
@@ -683,23 +662,21 @@ export class QueueModel {
     return db.raw(sql, [queueId, queueId]);
   }
 
-  getResponseQueueInfo(db: knex, queueId: any) {
-    const sql = `
-    select q.hn, q.vn, q.queue_id, q.queue_number, q.queue_interview, q.queue_running, q.date_serv,
-    sp.service_point_name, sp.local_code as service_point_code, q.date_create,sp.department_id,
-    (select hosname from q4u_system limit 1) as hosname,
-    (select hoscode from q4u_system limit 1) as hosid,
-    (
-      select count(*) from q4u_queue where queue_id<? and room_id is null 
-      and service_point_id=q.service_point_id and date_serv=q.date_serv
-    ) as remain_queue, p.priority_name, r.room_name, r.room_number
-    from q4u_queue as q 
-    inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
-    left join q4u_priorities as p on p.priority_id=q.priority_id
-    left join q4u_service_rooms as r on r.room_id=q.room_id
-    where q.queue_id=?
-    `;
-    return db.raw(sql, [queueId, queueId]);
+  getResponseQueueInfo(db: knex, queueIds: any[]) {
+
+    var sqlHospname = db('q4u_system').select('hosname').as('hosname');
+    var sqlHoscode = db('q4u_system').select('hoscode').as('hosid');
+
+    return db('q4u_queue as q')
+      .select('q.hn', 'q.vn', 'q.queue_id', 'q.queue_number', 'q.queue_interview', 'q.queue_running', 'q.date_serv',
+        'sp.service_point_name', 'sp.local_code as service_point_code',
+        'q.date_create', 'sp.department_id', 'p.priority_name', 'r.room_name', 'r.room_number',
+        sqlHoscode, sqlHospname)
+      .innerJoin('q4u_queue_group_detail as qg', 'qg.queue_id', 'q.queue_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .leftJoin('q4u_priorities as p', 'p.priority_id', 'q.priority_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'qg.room_id')
+      .whereIn('q.queue_id', queueIds);
   }
 
   apiGetCurrentQueueByHN(db: knex, hn: any, servicePointId: any) {
