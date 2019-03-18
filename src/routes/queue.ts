@@ -873,8 +873,10 @@ const router = (fastify, { }, next) => {
       }
 
       // Send notify to H4U Server
-      // 
-      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+      let queueIds: any = [];
+      queueIds.push(queueId)
+
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
       if (rsQueue[0].length) {
         departmentId = rsQueue[0][0].department_id;
       }
@@ -1145,8 +1147,11 @@ const router = (fastify, { }, next) => {
       } else {
         await queueModel.markCompleted(db, queueId);
       }
+      
+      let queueIds: any = [];
+      queueIds.push(queueId)
 
-      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
       // Send notify to H4U Server
       // 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
