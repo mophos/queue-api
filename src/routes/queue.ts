@@ -1146,7 +1146,10 @@ const router = (fastify, { }, next) => {
         await queueModel.markCompleted(db, queueId);
       }
 
-      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
+      let queueIds: any = [];
+      queueIds.push(queueId)
+
+      const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueIds);
       // Send notify to H4U Server
       // 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
