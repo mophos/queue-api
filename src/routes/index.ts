@@ -11,9 +11,9 @@ const router = (fastify, { }, next) => {
 
   var db: Knex = fastify.db;
 
-  fastify.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
-    reply.code(200).send({ message: 'Fastify, RESTful API services!' })
-  });
+  // fastify.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
+  //   reply.code(200).send({ message: 'Fastify, RESTful API services!' })
+  // });
 
   fastify.get('/info', async (req: fastify.Request, reply: fastify.Reply) => {
     try {
