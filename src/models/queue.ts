@@ -570,14 +570,14 @@ export class QueueModel {
     return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueId]);
   }
 
-  updateCurrentQueueGroup(db: knex, servicePointId, dateServ, queueId, roomId, queueRunning) {
-    var sql = `
-    INSERT INTO q4u_queue_group_detail(service_point_id, date_serv, queue_id, room_id, queue_running)
-    VALUES(?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE queue_id=?
-    `;
-    return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueRunning, queueId]);
-  }
+  // updateCurrentQueueGroup(db: knex, servicePointId, dateServ, queueId, roomId, queueRunning) {
+  //   var sql = `
+  //   INSERT INTO q4u_queue_group_detail(service_point_id, date_serv, queue_id, room_id, queue_running)
+  //   VALUES(?, ?, ?, ?, ?)
+  //   ON DUPLICATE KEY UPDATE queue_id=?
+  //   `;
+  //   return db.raw(sql, [servicePointId, dateServ, queueId, roomId, queueRunning, queueId]);
+  // }
 
   updateCurrentQueueGroups(db: knex, queues: any) {
     return db('q4u_queue_group_detail').insert(queues);
