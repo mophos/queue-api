@@ -221,12 +221,16 @@ const router = (fastify, { }, next) => {
           await queueModel.markUnPending(db, queueId);
 
           await queueModel.markCompleted(db, queueId);
+          var _queueIds: any = [];
+          _queueIds.push(queueId);
+
+          const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
+
           // Send notify to H4U Server
           if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
-            const rsQueue: any = await queueModel.getResponseQueueInfo(db, queueId);
 
-            if (rsQueue[0].length) {
-              const data = rsQueue[0][0];
+            if (rsQueue.length) {
+              const data = rsQueue[0];
               const queueWithoutPrefix = +data.queue_running;
 
               const params = {
@@ -266,7 +270,6 @@ const router = (fastify, { }, next) => {
 
           fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
           fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
-
 
         } else {
           reply.status(HttpStatus.INTERNAL_SERVER_ERROR)

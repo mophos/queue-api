@@ -375,9 +375,10 @@ export class QueueModel {
       .leftJoin('q4u_queue_detail as qd', 'qd.queue_id', 'q.queue_id')
       .where('q.date_serv', dateServ)
       .where('sp.department_id', departmentId)
-      .where('q.is_completed', 'Y')
+      // .where('q.is_completed', 'Y')
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
+      .groupBy('q.room_id')
       .orderBy('qd.update_date', 'desc');
     return sql;
 
