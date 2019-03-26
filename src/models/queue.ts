@@ -303,6 +303,7 @@ export class QueueModel {
       // .whereNull('q.room_id')
       .where('q.is_completed', 'N')
       .whereNot('q.is_cancel', 'Y')
+      .whereNot('q.mark_pending', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(limit)
@@ -317,6 +318,7 @@ export class QueueModel {
       .where('q.service_point_id', servicePointId)
       .where('q.is_completed', 'N')
       .whereNot('q.is_cancel', 'Y')
+      .whereNot('q.mark_pending', 'Y')
       .where('q.date_serv', dateServ);
     // .whereNull('q.room_id');
   }
