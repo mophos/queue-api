@@ -193,6 +193,30 @@ export class QueueModel {
       .where('sp.department_id', departmentId)
       .where('q.date_serv', dateServ)
       .where('q.mark_pending', 'N')
+      .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
+      .orderBy('q.queue_id', 'asc')
+      .groupBy('q.queue_id')
+      .limit(limit)
+      .offset(offset);
+    return sql;
+
+  }
+
+  getQueueHistoryByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any) {
+    let sql = db('q4u_queue as q')
+      .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
+        'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
+        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview',
+        'sp.department_id', 'sd.department_name', 'sp.service_point_name')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .innerJoin('q4u_departments as sd', 'sp.department_id', 'sd.department_id')
+      .where('sp.department_id', departmentId)
+      .where('q.date_serv', dateServ)
+      .where('q.mark_pending', 'N')
+      .where('q.is_completed', 'Y')
       .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
@@ -211,6 +235,22 @@ export class QueueModel {
       .innerJoin('q4u_departments as sd', 'sp.department_id', 'sd.department_id')
       .where('sp.department_id', departmentId)
       .where('q.mark_pending', 'N')
+      .where('q.is_completed', 'N')
+      .whereNot('q.is_cancel', 'Y')
+      .where('q.date_serv', dateServ);
+    // .whereNull('q.room_id');
+  }
+
+  getQueueHistoryByDepartmentIdTotal(db: knex, dateServ: any, departmentId: any) {
+    return db('q4u_queue as q')
+      .select(db.raw('count(*) as total'))
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .innerJoin('q4u_departments as sd', 'sp.department_id', 'sd.department_id')
+      .where('sp.department_id', departmentId)
+      .where('q.mark_pending', 'N')
+      .where('q.is_completed', 'Y')
       .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ);
     // .whereNull('q.room_id');
