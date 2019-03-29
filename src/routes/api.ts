@@ -196,94 +196,105 @@ const router = (fastify, { }, next) => {
 
   });
 
-  fastify.post('/call', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/call', async (req: fastify.Request, reply: fastify.Reply) => {
 
     const hn = req.body.hn;
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
+    const token = req.body.token;
 
     try {
+      if (token) {
+        if (hn && servicePointId && roomId) {
+          fastify.jwt.verify(token)
+          // check token 
+          const rsToken: any = await tokenModel.find(db, token);
+          if (rsToken.length) {
+            var rs: any = await queueModel.apiGetCurrentQueueByHN(db, hn, servicePointId);
+            if (rs.length) {
+              var _queue = rs[0];
 
-      if (hn) {
-        var rs: any = await queueModel.apiGetCurrentQueueByHN(db, hn, servicePointId);
-        if (rs.length) {
-          var _queue = rs[0];
+              const dateServ: any = moment().format('YYYY-MM-DD');
 
-          const dateServ: any = moment().format('YYYY-MM-DD');
+              const queueId = _queue.queue_id;
+              const roomNumber = _queue.room_number;
+              const queueNumber = _queue.queue_number;
 
-          const queueId = _queue.queue_id;
-          const roomNumber = _queue.room_number;
-          const queueNumber = _queue.queue_number;
+              await queueModel.setQueueRoomNumber(db, queueId, roomId);
+              await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
+              await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
+              await queueModel.markUnPending(db, queueId);
 
-          await queueModel.setQueueRoomNumber(db, queueId, roomId);
-          await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
-          await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
-          await queueModel.markUnPending(db, queueId);
+              await queueModel.markCompleted(db, queueId);
+              var _queueIds: any = [];
+              _queueIds.push(queueId);
 
-          await queueModel.markCompleted(db, queueId);
-          var _queueIds: any = [];
-          _queueIds.push(queueId);
+              const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
 
-          const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
+              // Send notify to H4U Server
+              if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-          // Send notify to H4U Server
-          if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
+                if (rsQueue.length) {
+                  const data = rsQueue[0];
+                  const queueWithoutPrefix = +data.queue_running;
 
-            if (rsQueue.length) {
-              const data = rsQueue[0];
-              const queueWithoutPrefix = +data.queue_running;
+                  const params = {
+                    hosid: data.hosid,
+                    servicePointCode: data.service_point_code,
+                    queueNumber: data.queue_number,
+                    queueWithoutPrefix: queueWithoutPrefix,
+                    roomNumber: data.room_number,
+                    token: process.env.Q4U_NOTIFY_TOKEN,
+                    roomName: data.room_name,
+                    dateServ: moment(data.date_serv).format('YYYYMMDD'),
+                  };
 
-              const params = {
-                hosid: data.hosid,
-                servicePointCode: data.service_point_code,
-                queueNumber: data.queue_number,
-                queueWithoutPrefix: queueWithoutPrefix,
-                roomNumber: data.room_number,
-                token: process.env.Q4U_NOTIFY_TOKEN,
-                roomName: data.room_name,
-                dateServ: moment(data.date_serv).format('YYYYMMDD'),
-              };
+                  request.post(process.env.Q4U_NOTIFY_URL, {
+                    form: params
+                  }, (err: any, res: any, body: any) => {
+                    if (err) console.log(err);
+                    console.log(body);
+                  });
 
-              request.post(process.env.Q4U_NOTIFY_URL, {
-                form: params
-              }, (err: any, res: any, body: any) => {
-                if (err) console.log(err);
-                console.log(body);
-              });
+                }
 
+              }
+
+              // publish mqtt
+              const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+
+              const globalTopic = process.env.QUEUE_CENTER_TOPIC;
+
+              const payload = {
+                queueNumber: queueNumber,
+                roomNumber: roomNumber,
+                servicePointId: servicePointId
+              }
+
+              reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+
+              fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
+              fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
+
+            } else {
+              reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .send({
+                  statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                  message: 'ไม่พบคิวที่ต้องการ'
+                });
             }
-
+          } else {
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) })
           }
-
-          // publish mqtt
-          const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
-
-          const globalTopic = process.env.QUEUE_CENTER_TOPIC;
-
-          const payload = {
-            queueNumber: queueNumber,
-            roomNumber: roomNumber,
-            servicePointId: servicePointId
-          }
-
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
-
-          fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
-          fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
-
         } else {
           reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .send({
               statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-              message: 'ไม่พบคิวที่ต้องการ'
+              message: 'ไม่พบ HN'
             });
         }
       } else {
-        reply.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .send({
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            message: 'ไม่พบ HN'
-          });
+        reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบ TOKEN' })
       }
 
     } catch (error) {
@@ -299,14 +310,20 @@ const router = (fastify, { }, next) => {
 
     if (token) {
       if (hn) {
-        try {
-          const rs = await queueModel.getCurrentQueue(db, hn);
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: rs[0].queue_number });
-        } catch (error) {
-          fastify.log.error(error);
-          reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+        const decoded = fastify.jwt.verify(token)
+        // check token 
+        const rsToken: any = await tokenModel.find(db, token);
+        if (rsToken.length) {
+          try {
+            const rs = await queueModel.getCurrentQueue(db, hn);
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: rs[0].queue_number });
+          } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+          }
+        } else {
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) })
         }
-
       } else {
         reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' })
       }
