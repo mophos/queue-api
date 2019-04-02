@@ -100,7 +100,7 @@ export class HosxpModel {
       }
     }
 
-    return sql.orderBy('o.vsttime', 'asc');
+    return sql;
   }
 
 }
