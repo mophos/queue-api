@@ -8,7 +8,8 @@ export class UserServicePointsModel {
     return db('q4u_user_service_points as up')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'up.service_point_id')
       .innerJoin('q4u_departments as d', 'sp.department_id', 'd.department_id')
-      .select('up.*', 'sp.service_point_name', 'sp.local_code', 'sp.department_id', 'd.department_name')
+      .leftJoin('q4u_sounds as s', 's.sound_id', 'sp.sound_id')
+      .select('up.*', 'sp.service_point_name', 'sp.local_code', 'sp.department_id', 'd.department_name', 's.sound_file')
       .where('up.user_id', userId);
   }
 
