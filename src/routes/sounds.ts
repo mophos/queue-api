@@ -28,9 +28,11 @@ const router = (fastify, { }, next) => {
   fastify.put('/:servicePointId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointId: any = req.params.servicePointId;
     const soundId = req.body.soundId;
+    const speed = req.body.speed;
 
     const data: any = {
       sound_id: soundId,
+      sound_speed: speed
     };
 
     try {

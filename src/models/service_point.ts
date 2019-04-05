@@ -34,6 +34,13 @@ export class ServicePointModel {
     return db(this.tableName).select('local_code');
   }
 
+  getSound(db: knex, servicePointId: any) {
+    return db('q4u_service_points as sp')
+      .join('q4u_sounds as s', 'sp.sound_id', 's.sound_id')
+      .select('sp.sound_id', 'sp.sound_speed', 's.sound_file')
+      .where({ 'service_point_id': servicePointId });
+  }
+
   save(db: knex, data: any) {
     return db(this.tableName).insert(data);
   }
