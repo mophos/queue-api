@@ -950,8 +950,6 @@ const router = (fastify, { }, next) => {
       const departmentTopic = process.env.DEPARTMENT_TOPIC + '/' + departmentId;
       const globalTopic = process.env.QUEUE_CENTER_TOPIC;
 
-      console.log('DEPARTMENT TOPIC = ' + departmentTopic);
-
       const payload = {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
@@ -1378,6 +1376,15 @@ const router = (fastify, { }, next) => {
     try {
       const rs: any = await servicePointModel.getSound(db, servicePointId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
+  fastify.get('/setting/speak', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    try {
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: process.env.SPEAK_SINGLE || 'Y' })
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
