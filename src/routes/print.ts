@@ -74,7 +74,7 @@ const router = (fastify, { }, next) => {
 
   });
 
-  fastify.post('/queue/prepare/print', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/queue/prepare/print', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const queueId: any = req.body.queueId;
     const topic = req.body.topic;
     const printSmallQueue = req.body.printSmallQueue || 'N';
