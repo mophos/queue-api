@@ -203,6 +203,8 @@ const router = (fastify, { }, next) => {
     const roomId = req.body.roomId;
     const token = req.body.token;
 
+    var departmentId = null;
+
     try {
       if (token) {
         if (hn && servicePointId && roomId) {
@@ -230,6 +232,10 @@ const router = (fastify, { }, next) => {
               _queueIds.push(queueId);
 
               const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
+
+              if (rsQueue.length) {
+                departmentId = rsQueue[0].department_id;
+              }
 
               // Send notify to H4U Server
               if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
@@ -262,17 +268,20 @@ const router = (fastify, { }, next) => {
 
               // publish mqtt
               const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
+              const departmentTopic = process.env.DEPARTMENT_TOPIC + '/' + departmentId;
 
               const globalTopic = process.env.QUEUE_CENTER_TOPIC;
 
               const payload = {
                 queueNumber: queueNumber,
                 roomNumber: roomNumber,
-                servicePointId: servicePointId
+                servicePointId: servicePointId,
+                departmentId: departmentId
               }
 
               reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
+              fastify.mqttClient.publish(departmentTopic, JSON.stringify(payload), { qos: 0, retain: false });
               fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
               fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
@@ -332,7 +341,7 @@ const router = (fastify, { }, next) => {
     }
   });
 
-  fastify.post('/pending',async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/pending', async (req: fastify.Request, reply: fastify.Reply) => {
 
     const queueId = req.body.queueId;
     const servicePointId = req.body.servicePointId;
@@ -345,7 +354,7 @@ const router = (fastify, { }, next) => {
           const decoded = fastify.jwt.verify(token)
           // check token 
           const rsToken: any = await tokenModel.find(db, token);
-          
+
           if (rsToken.length) {
             await queueModel.markPending(db, queueId, servicePointId);
             // get queue info
