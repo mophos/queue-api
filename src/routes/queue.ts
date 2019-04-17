@@ -451,6 +451,21 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.post('/waiting/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const servicePointId = req.params.servicePointId;
+    const query = req.body.query;
+
+    try {
+      const dateServ: any = moment().format('YYYY-MM-DD');
+      const rs: any = await queueModel.getWaitingListQuery(db, dateServ, servicePointId, query);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
   fastify.get('/waiting-group/:servicePointId', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
@@ -698,6 +713,7 @@ const router = (fastify, { }, next) => {
     const queueId = req.body.queueId;
     const servicePointId = req.body.servicePointId;
     const priorityId = req.body.priorityId;
+    const pendigOldQueue = req.body.pendigOldQueue || null;
 
     try {
       await queueModel.markPending(db, queueId, servicePointId);
@@ -716,7 +732,7 @@ const router = (fastify, { }, next) => {
         const prefixPoint: any = rsServicePoint[0].prefix || '0';
         const usePriorityQueueRunning = rsServicePoint[0].priority_queue_running || 'N';
 
-        const useOldQueue: any = rsServicePoint[0].use_old_queue || 'N';
+        const useOldQueue: any = pendigOldQueue ? pendigOldQueue : rsServicePoint[0].use_old_queue || 'N';
 
         if (useOldQueue === 'Y') {
           var queueNumber = 0;
