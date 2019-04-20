@@ -39,7 +39,8 @@ const router = (fastify, { }, next) => {
       NOTIFY_USER: process.env.LOCAL_NOTIFY_USER,
       NOTIFY_PASSWORD: process.env.LOCAL_NOTIFY_PASSWORD,
       NOTIFY_SERVER: process.env.LOCAL_NOTIFY_SERVER,
-      NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT
+      NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT,
+      SPEAK_SINGLE: process.env.SPEAK_SINGLE || 'N'
     }, { expiresIn: '1y' });
 
     const data: any = {

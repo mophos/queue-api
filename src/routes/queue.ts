@@ -1398,15 +1398,6 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.get('/setting/speak', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    try {
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: process.env.SPEAK_SINGLE || 'Y' })
-    } catch (error) {
-      fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
-    }
-  })
-
   next();
 
 }
