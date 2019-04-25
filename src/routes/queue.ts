@@ -15,10 +15,13 @@ import { HomcModel } from '../models/his/homc';
 // import { HimproModel } from '../models/his/himpro';
 import { ServicePointModel } from '../models/service_point';
 import { PriorityModel } from '../models/priority';
+import { ServiceRoomModel } from '../models/service_room';
 
 const queueModel = new QueueModel();
 const servicePointModel = new ServicePointModel();
 const priorityModel = new PriorityModel();
+const serviceRoomModel = new ServiceRoomModel();
+
 const hisType = process.env.HIS_TYPE || 'universal';
 
 // ห้ามแก้ไข // 
@@ -1249,6 +1252,9 @@ const router = (fastify, { }, next) => {
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
 
+      var rsRoom: any = await serviceRoomModel.info(db, roomId);
+      var roomName = rsRoom.length ? rsRoom[0].room_name : null;
+
       if (isCompleted === 'N') {
         isInterview = 'Y';
         await queueModel.markInterview(db, queueId);
@@ -1264,7 +1270,6 @@ const router = (fastify, { }, next) => {
       // 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-        // console.log(rsQueue[0]);
         if (rsQueue.length) {
           const data = rsQueue[0];
           const queueWithoutPrefix = +data.queue_running;
@@ -1274,9 +1279,9 @@ const router = (fastify, { }, next) => {
             servicePointCode: data.service_point_code,
             queueNumber: data.queue_number,
             queueWithoutPrefix: queueWithoutPrefix,
-            roomNumber: data.room_number,
+            roomNumber: roomNumber,
             token: process.env.Q4U_NOTIFY_TOKEN,
-            roomName: data.room_name,
+            roomName: roomName,
             dateServ: moment(data.date_serv).format('YYYYMMDD'),
           };
 
