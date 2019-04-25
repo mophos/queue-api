@@ -154,6 +154,44 @@ const router = (fastify, { }, next) => {
     }
   })
 
+  fastify.get('/his-visit-history', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const limit = +req.query.limit;
+    const offset = +req.query.offset;
+    const servicePointCode: any = req.query.servicePointCode || '';
+    const query: any = req.query.query || '';
+
+    try {
+      const dateServ: any = moment().format('YYYY-MM-DD');
+      const rsLocalCode: any = await servicePointModel.getLocalCode(db);
+      const rsCurrentOnQueue: any = await queueModel.getCurrentVisitOnQueue(db, dateServ);
+
+      var localCodes: any = [];
+      var vn: any = [];
+
+      rsLocalCode.forEach(v => {
+        localCodes.push(v.local_code);
+      });
+
+      rsCurrentOnQueue.forEach(v => {
+        vn.push(v.vn);
+      });
+
+      const rsTotal: any = await hisModel.getVisitHistoryTotal(dbHIS, dateServ, localCodes, vn, servicePointCode, query);
+      const rs: any = await hisModel.getVisitHistoryList(dbHIS, dateServ, localCodes, vn, servicePointCode, query, limit, offset);
+      for (const i of rs) {
+        const q: any = await queueModel.getCurrentQueue(db, i.hn);
+        i.queue_id = q[0].queue_id;
+      }
+
+
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  })
+
   fastify.post('/register', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const hn = req.body.hn;
     const vn = req.body.vn;
@@ -890,7 +928,7 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-
+    var isInterview = 'N';
     var departmentId: any;
 
     try {
@@ -921,6 +959,7 @@ const router = (fastify, { }, next) => {
       await queueModel.markUnPending(db, queueId);
 
       if (isCompleted === 'N') {
+        isInterview = 'Y';
         await queueModel.markInterview(db, queueId);
       } else {
         await queueModel.markCompleted(db, queueId);
@@ -973,7 +1012,8 @@ const router = (fastify, { }, next) => {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
         servicePointId: servicePointId,
-        departmentId: departmentId
+        departmentId: departmentId,
+        isInterview: isInterview
       }
 
       fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
@@ -1202,6 +1242,7 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
+    var isInterview = 'N';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -1215,6 +1256,7 @@ const router = (fastify, { }, next) => {
       var roomName = rsRoom.length ? rsRoom[0].room_name : null;
 
       if (isCompleted === 'N') {
+        isInterview = 'Y';
         await queueModel.markInterview(db, queueId);
       } else {
         await queueModel.markCompleted(db, queueId);
@@ -1228,7 +1270,6 @@ const router = (fastify, { }, next) => {
       // 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
-        // console.log(rsQueue[0]);
         if (rsQueue.length) {
           const data = rsQueue[0];
           const queueWithoutPrefix = +data.queue_running;
@@ -1264,7 +1305,8 @@ const router = (fastify, { }, next) => {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
         servicePointId: servicePointId,
-        departmentId: departmentId
+        departmentId: departmentId,
+        isInterview: isInterview
       }
 
       fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
