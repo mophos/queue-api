@@ -335,7 +335,7 @@ export class QueueModel {
     return db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
-        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
+        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview', 'q.is_completed')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
@@ -395,7 +395,7 @@ export class QueueModel {
       .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
-        'r.room_name', 'r.room_number', 'sp.service_point_name', 'sp.department_id')
+        'r.room_name', 'r.room_number', 'sp.service_point_name', 'sp.department_id', 'q.is_completed')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -545,7 +545,7 @@ export class QueueModel {
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.prority_color',
-        'r.room_name', 'r.room_number', 'sp.service_point_name')
+        'r.room_name', 'r.room_number', 'sp.service_point_name', 'q.is_interview')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')

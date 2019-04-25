@@ -103,4 +103,79 @@ export class HosxpModel {
     return sql;
   }
 
+  getVisitHistoryList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
+    var sql = db('ovst as o')
+      .select('o.vn', 'o.hn', db.raw('o.vstdate as date_serv'), db.raw('o.vsttime as time_serv'),
+        'o.main_dep as clinic_code', 'k.department as clinic_name',
+        'pt.pname as title', 'pt.fname as first_name', 'pt.lname as last_name',
+        'pt.birthday as birthdate', 'pt.sex as sex', 'o.main_dep_queue as his_queue')
+      .innerJoin('patient as pt', 'pt.hn', 'o.hn')
+      .innerJoin('kskdepartment as k', 'k.depcode', 'o.main_dep')
+      .where('o.vstdate', dateServ)
+      .whereIn('o.main_dep', localCode)
+      .whereIn('o.vn', vn);
+
+    if (query) {
+      var _arrQuery = query.split(' ');
+      var firstName = null;
+      var lastName = null;
+
+      if (_arrQuery.length === 2) {
+        firstName = `${_arrQuery[0]}%`;
+        lastName = `${_arrQuery[1]}%`;
+      }
+
+      sql.where(w => {
+        var _where = w.where('o.hn', query);
+        if (firstName && lastName) {
+          _where.orWhere(x => x.where('pt.fname', 'like', firstName).where('pt.lname', 'like', lastName))
+        }
+        return _where;
+      });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
+    }
+
+    return sql.limit(limit)
+      .offset(offset)
+      .orderBy('o.vsttime', 'asc');
+
+  }
+
+  getVisitHistoryTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any) {
+    var sql = db('ovst as o')
+      .select(db.raw('count(*) as total'))
+      .innerJoin('patient as pt', 'pt.hn', 'o.hn')
+      .innerJoin('kskdepartment as k', 'k.depcode', 'o.main_dep')
+      .where('o.vstdate', dateServ)
+      .whereIn('o.main_dep', localCode)
+      .whereIn('o.vn', vn);
+
+    if (query) {
+      var _arrQuery = query.split(' ');
+      var firstName = null;
+      var lastName = null;
+
+      if (_arrQuery.length === 2) {
+        firstName = `${_arrQuery[0]}%`;
+        lastName = `${_arrQuery[1]}%`;
+      }
+
+      sql.where(w => {
+        var _where = w.where('o.hn', query);
+        if (firstName && lastName) {
+          _where.orWhere(x => x.where('pt.fname', 'like', firstName).where('pt.lname', 'like', lastName))
+        }
+        return _where;
+      });
+    } else {
+      if (servicePointCode) {
+        sql.where('o.main_dep', servicePointCode);
+      }
+    }
+
+    return sql;
+  }
 }
