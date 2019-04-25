@@ -10,6 +10,11 @@ export class ServiceRoomModel {
       .orderBy('room_number', 'asc');
   }
 
+  info(db: knex, roomId: any) {
+    return db(this.tableName)
+      .where('room_id', roomId)
+  }
+
   save(db: knex, data: any) {
     return db(this.tableName).insert(data);
   }
