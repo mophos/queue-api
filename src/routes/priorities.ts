@@ -11,7 +11,7 @@ const router = (fastify, { }, next) => {
 
   var db: Knex = fastify.db;
 
-  fastify.get('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.get('/', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
       const rs: any = await priorityModel.list(db);
@@ -23,7 +23,7 @@ const router = (fastify, { }, next) => {
 
   })
 
-  fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityName = req.body.priorityName;
     const priorityPrefix = req.body.priorityPrefix;
     // const priorityColor = req.body.priorityColor;
@@ -44,7 +44,7 @@ const router = (fastify, { }, next) => {
 
   })
 
-  fastify.put('/:priorityId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/:priorityId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityId: any = req.params.priorityId;
     const priorityName = req.body.priorityName;
     const priorityPrefix = req.body.priorityPrefix;
@@ -66,7 +66,7 @@ const router = (fastify, { }, next) => {
 
   })
 
-  fastify.delete('/:priorityId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/:priorityId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityId: any = req.params.priorityId;
 
     try {

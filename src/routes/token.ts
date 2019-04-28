@@ -14,7 +14,7 @@ const router = (fastify, { }, next) => {
 
   var db: Knex = fastify.db;
 
-  fastify.get('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.get('/', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
       const rs: any = await tokenModel.list(db);
@@ -25,7 +25,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.post('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const createdDate = moment().format('YYYY-MM-DD HH:mm:ss');
     const expiredDate = moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss');
     const token = fastify.jwt.sign({
@@ -39,7 +39,8 @@ const router = (fastify, { }, next) => {
       NOTIFY_USER: process.env.LOCAL_NOTIFY_USER,
       NOTIFY_PASSWORD: process.env.LOCAL_NOTIFY_PASSWORD,
       NOTIFY_SERVER: process.env.LOCAL_NOTIFY_SERVER,
-      NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT
+      NOTIFY_PORT: process.env.LOCAL_NOTIFY_HTTP_PORT,
+      SPEAK_SINGLE: process.env.SPEAK_SINGLE || 'N'
     }, { expiresIn: '1y' });
 
     const data: any = {
@@ -57,7 +58,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.delete('/', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const token: any = req.query.token;
 
     try {

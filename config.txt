@@ -31,10 +31,12 @@ Q4U_NOTIFY_URL=http://mqtt.h4u.moph.go.th/v1/queue/update
 # HIS_TYPE เช่น hi, hosxp, homec, universal, mbase, ezhosp, dhos
 HIS_TYPE=hi
 
-QUEUE_DIGIT=4
+QUEUE_DIGIT=3
 USE_PRIORITY_PREFIX=N
 USE_PRIORITY_QUEUE_RUNNING=N
 ZERO_PADDING=Y
+# Y = อ่านเลขคิวที่ละตัว (11 อ่านว่า หนึ่งหนึ่ง), N = อ่านเลขคิวเป็นคำพูด (11 อ่านว่า สิบเอ็ด)
+SPEAK_SINGLE=N
 
 USE_HIS_QUEUE=N
 

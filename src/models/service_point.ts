@@ -6,8 +6,9 @@ export class ServicePointModel {
 
   list(db: knex) {
     return db('q4u_service_points as sp')
-      .select('sp.*', 'd.department_name')
+      .select('sp.*', 'd.department_name', 's.sound_file')
       .leftJoin('q4u_departments as d', 'd.department_id', 'sp.department_id')
+      .leftJoin('q4u_sounds as s', 's.sound_id', 'sp.sound_id')
       .orderBy('sp.service_point_name');
   }
 
@@ -31,6 +32,13 @@ export class ServicePointModel {
 
   getLocalCode(db: knex) {
     return db(this.tableName).select('local_code');
+  }
+
+  getSound(db: knex, servicePointId: any) {
+    return db('q4u_service_points as sp')
+      .join('q4u_sounds as s', 'sp.sound_id', 's.sound_id')
+      .select('sp.sound_id', 'sp.sound_speed', 's.sound_file')
+      .where({ 'service_point_id': servicePointId });
   }
 
   save(db: knex, data: any) {

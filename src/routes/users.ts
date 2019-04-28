@@ -16,7 +16,7 @@ const router = (fastify, { }, next) => {
 
   var db: Knex = fastify.db;
 
-  fastify.get('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.get('/', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
       const rs: any = await userModel.list(db);
@@ -27,7 +27,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.post('/', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.post('/', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const username = req.body.username;
 
     const password = req.body.password;
@@ -54,7 +54,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.put('/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/:userId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId = req.params.userId;
     const fullname = req.body.fullname;
     const isActive = req.body.isActive;
@@ -81,7 +81,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.put('/changepass/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/changepass/:userId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId = req.params.userId;
     const password = req.body.password;
     const encPassword = crypto.createHash('md5').update(password).digest('hex');
@@ -99,7 +99,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.delete('/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.delete('/:userId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId: any = req.params.userId;
 
     try {
@@ -111,7 +111,7 @@ const router = (fastify, { }, next) => {
     }
   })
 
-  fastify.put('/service-points/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/service-points/:userId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId: any = req.params.userId;
     const items = req.body.items;
 
@@ -135,7 +135,7 @@ const router = (fastify, { }, next) => {
   })
 
 
-  fastify.get('/service-points/list/:userId', { beforeHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.get('/service-points/list/:userId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const userId: any = req.params.userId;
 
     try {
