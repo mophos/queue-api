@@ -781,4 +781,22 @@ export class QueueModel {
       .limit(1);
 
   }
+
+  getVisitHistoryList(db: knex, dateServe: any, servicePointId, query, limit, offset) {
+    return db('q4u_queue as q')
+      .join('q4u_person as p', 'p.hn', 'q.hn')
+      .where('q.date_serv', dateServe)
+      .where('q.service_point_id', servicePointId)
+      .orderBy('q.queue_id', 'DESC')
+      .limit(limit)
+      .offset(offset)
+  }
+
+  getVisitHistoryTotal(db: knex, dateServe: any, servicePointId, query) {
+    return db('q4u_queue as q')
+      .join('q4u_person as p', 'p.hn', 'q.hn')
+      .count('*').as('total')
+      .where('q.date_serv', dateServe)
+      .where('q.service_point_id', servicePointId)
+  }
 }
