@@ -781,4 +781,65 @@ export class QueueModel {
       .limit(1);
 
   }
+
+  getVisitHistoryList(db: knex, dateServe: any, servicePointId, query, limit, offset) {
+    const _query = `%${query}%`
+    let sql = db('q4u_queue as q')
+      .join('q4u_person as p', 'p.hn', 'q.hn')
+      .where('q.date_serv', dateServe);
+
+    if (servicePointId) {
+      sql.where('q.service_point_id', servicePointId);
+    }
+
+    if (query) {
+      sql.where((w) => {
+        w.orWhere('p.first_name', 'like', _query)
+        w.orWhere('p.last_name', 'like', _query)
+        w.orWhere('q.hn', 'like', _query)
+        w.orWhere('q.queue_number', 'like', _query)
+      })
+      const _arrQuery = query.split(' ');
+      if (_arrQuery.length == 2) {
+        sql.where((w) => {
+          w.orWhere('p.first_name', 'like', `%${_arrQuery[0]}%`)
+          w.orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`)
+        })
+      }
+    }
+    sql.orderBy('q.queue_id', 'DESC')
+      .limit(limit)
+      .offset(offset);
+    return sql;
+  }
+
+  getVisitHistoryTotal(db: knex, dateServe: any, servicePointId, query) {
+
+    const _query = `%${query}%`
+    let sql = db('q4u_queue as q')
+      .count('*').as('total')
+      .join('q4u_person as p', 'p.hn', 'q.hn')
+      .where('q.date_serv', dateServe);
+
+    if (servicePointId) {
+      sql.where('q.service_point_id', servicePointId);
+    }
+
+    if (query) {
+      sql.where((w) => {
+        w.orWhere('p.first_name', 'like', _query)
+        w.orWhere('p.last_name', 'like', _query)
+        w.orWhere('q.hn', 'like', _query)
+        w.orWhere('q.queue_number', 'like', _query)
+      })
+      const _arrQuery = query.split(' ');
+      if (_arrQuery.length == 2) {
+        sql.where((w) => {
+          w.orWhere('p.first_name', 'like', `%${_arrQuery[0]}%`)
+          w.orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`)
+        })
+      }
+    }
+    return sql;
+  }
 }

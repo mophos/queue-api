@@ -158,32 +158,13 @@ const router = (fastify, { }, next) => {
 
     const limit = +req.query.limit;
     const offset = +req.query.offset;
-    const servicePointCode: any = req.query.servicePointCode || '';
+    const servicePointId: any = req.query.servicePointId;
     const query: any = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
-      const rsLocalCode: any = await servicePointModel.getLocalCode(db);
-      const rsCurrentOnQueue: any = await queueModel.getCurrentVisitOnQueue(db, dateServ);
-
-      var localCodes: any = [];
-      var vn: any = [];
-
-      rsLocalCode.forEach(v => {
-        localCodes.push(v.local_code);
-      });
-
-      rsCurrentOnQueue.forEach(v => {
-        vn.push(v.vn);
-      });
-
-      const rsTotal: any = await hisModel.getVisitHistoryTotal(dbHIS, dateServ, localCodes, vn, servicePointCode, query);
-      const rs: any = await hisModel.getVisitHistoryList(dbHIS, dateServ, localCodes, vn, servicePointCode, query, limit, offset);
-      for (const i of rs) {
-        const q: any = await queueModel.getCurrentQueue(db, i.hn);
-        i.queue_id = q[0].queue_id;
-      }
-
+      const rsTotal: any = await queueModel.getVisitHistoryTotal(db, dateServ, servicePointId, query);
+      const rs: any = await queueModel.getVisitHistoryList(db, dateServ, servicePointId, query, limit, offset);
 
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
     } catch (error) {
