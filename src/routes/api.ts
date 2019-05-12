@@ -202,6 +202,7 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const token = req.body.token;
+    const isInterview = req.body.isInterview || 'N';
 
     var departmentId = null;
 
@@ -276,7 +277,8 @@ const router = (fastify, { }, next) => {
                 queueNumber: queueNumber,
                 roomNumber: roomNumber,
                 servicePointId: servicePointId,
-                departmentId: departmentId
+                departmentId: departmentId,
+                isInterview: isInterview
               }
 
               if (rs.length) {
