@@ -768,6 +768,7 @@ export class QueueModel {
     return db('q4u_queue as q')
       .select('q.room_id', 'q.queue_id', 'q.queue_number', 'pr.priority_name', 'r.room_number')
       .leftJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
       .where('q.hn', hn)
       .where('q.service_point_id', servicePointId)
       .orderBy('q.queue_id', 'DESC')

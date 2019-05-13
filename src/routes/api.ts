@@ -202,6 +202,7 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const token = req.body.token;
+    const isInterview = req.body.isInterview || 'N';
 
     var departmentId = null;
 
@@ -276,7 +277,8 @@ const router = (fastify, { }, next) => {
                 queueNumber: queueNumber,
                 roomNumber: roomNumber,
                 servicePointId: servicePointId,
-                departmentId: departmentId
+                departmentId: departmentId,
+                isInterview: isInterview
               }
 
               if (rs.length) {
@@ -538,7 +540,7 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const token = req.body.token;
-
+    const isInterview = req.body.isInterview || 'N';
     try {
       if (token) {
         if (hn && servicePointId && roomId) {
@@ -603,7 +605,8 @@ const router = (fastify, { }, next) => {
               const payload = {
                 queueNumber: queueNumber,
                 roomNumber: roomNumber,
-                servicePointId: servicePointId
+                servicePointId: servicePointId,
+                isInterview: isInterview
               }
               if (rs.length) {
                 reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueId: rs[0].queue_id, priorityId: rs[0].priority_id });
