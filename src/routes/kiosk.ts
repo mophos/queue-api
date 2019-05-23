@@ -175,10 +175,6 @@ const router = (fastify, { }, next) => {
     }
   });
 
-  fastify.post('/test', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const data = req.body.data;
-    reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
-  })
   next();
 
 }
