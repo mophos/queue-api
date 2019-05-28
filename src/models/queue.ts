@@ -775,6 +775,16 @@ export class QueueModel {
       .limit(1);
   }
 
+  apiGetCurrentQueue(db: knex, queueId: any) {
+    return db('q4u_queue as q')
+      .select('q.room_id', 'q.queue_id', 'q.queue_number', 'pr.priority_name', 'r.room_number')
+      .leftJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .leftJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
+      .where('q.queue_id', queueId)
+      .orderBy('q.queue_id', 'DESC')
+      .limit(1);
+  }
+
   getCurrentQueue(db: knex, hn: any) {
     return db('q4u_queue')
       .where('hn', hn)
