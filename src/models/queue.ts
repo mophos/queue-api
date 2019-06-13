@@ -406,7 +406,7 @@ export class QueueModel {
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
       .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
-      .orderBy('q.date_update', 'desc');
+      .orderBy('qd.update_date', 'desc');
   }
 
   getWorkingGroup(db: knex, dateServ: any, servicePointId: any) {
