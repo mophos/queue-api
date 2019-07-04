@@ -41,6 +41,14 @@ export class ServicePointModel {
       .where({ 'service_point_id': servicePointId });
   }
 
+  getSoundList(db: knex, servicePointId: any) {
+    return db('q4u_service_points as sp')
+      .select('sp.sound_id', 'sr.room_id', 's.sound_file')
+      .join('q4u_service_rooms as sr', 'sr.service_point_id', 'sp.service_point_id')
+      .join('q4u_sounds as s', 'sr.sound_id', 's.sound_id')
+      .where({ 'sp.service_point_id': servicePointId });
+  }
+
   save(db: knex, data: any) {
     return db(this.tableName).insert(data);
   }
