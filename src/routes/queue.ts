@@ -1425,8 +1425,8 @@ const router = (fastify, { }, next) => {
     }
   });
 
-  fastify.get('/sound/service-point/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const servicePointId = req.params.servicePointId;
+  fastify.get('/sound/service-point', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const servicePointId = req.query.servicePointId;
     try {
       const rs: any = await servicePointModel.getSound(db, servicePointId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
@@ -1436,10 +1436,20 @@ const router = (fastify, { }, next) => {
     }
   });
 
-  fastify.get('/sound/service-room/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    const servicePointId = req.params.servicePointId;
+  fastify.get('/sound/service-room', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const servicePointId = req.query.servicePointId;
     try {
       const rs: any = await servicePointModel.getSoundList(db, servicePointId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  });
+  fastify.get('/sound/service-room-department', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const departmentId = req.query.departmentId;
+    try {
+      const rs: any = await servicePointModel.getSoundListDepartment(db, departmentId);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
