@@ -25,7 +25,7 @@ const router = (fastify, { }, next) => {
 
 
 
-  fastify.put('/:servicePointId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+  fastify.put('/service-point/:servicePointId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const servicePointId: any = req.params.servicePointId;
     const soundId = req.body.soundId;
     const speed = req.body.speed;
@@ -36,17 +36,35 @@ const router = (fastify, { }, next) => {
     };
 
     try {
-      await soundModel.update(db, servicePointId, data);
+      await soundModel.updatePoint(db, servicePointId, data);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
 
-  })
+  });
+
+  fastify.put('/service-room/:roomId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const roomId: any = req.params.roomId;
+    const soundId = req.body.soundId;
+
+    const data: any = {
+      sound_id: soundId
+    };
+
+    try {
+      await soundModel.updateRoom(db, roomId, data);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+
+  });
 
   next();
 
-}
+};
 
 module.exports = router;

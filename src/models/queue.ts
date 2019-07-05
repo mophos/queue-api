@@ -180,8 +180,8 @@ export class QueueModel {
     // .whereNull('q.room_id');
   }
 
-  getQueueByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any) {
-    let sql = db('q4u_queue as q')
+  getQueueByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any, sort: any) {
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview',
@@ -194,9 +194,15 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.mark_pending', 'N')
       .where('q.is_completed', 'N')
-      .whereNot('q.is_cancel', 'Y')
-      .orderBy('q.queue_id', 'asc')
-      .groupBy('q.queue_id')
+      .whereNot('q.is_cancel', 'Y');
+    if (sort == 'ASC') {
+      sql.orderBy([{ column: 'pr.priority_order', order: 'asc' }, { column: 'q.queue_id', order: 'asc' }]);
+    } else if (sort == 'DESC') {
+      sql.orderBy([{ column: 'pr.priority_order', order: 'desc' }, { column: 'q.queue_id', order: 'asc' }]);
+    } else {
+      sql.orderBy('q.queue_id', 'asc');
+    }
+    sql.groupBy('q.queue_id')
       .limit(limit)
       .offset(offset);
     return sql;
@@ -282,8 +288,8 @@ export class QueueModel {
   }
 
   searchWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any, query: string) {
-    let _query = `%${query}%`;
-    var sql = db('q4u_queue as q')
+    const _query = `%${query}%`;
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -295,9 +301,9 @@ export class QueueModel {
       .whereNotIn('q.queue_id', db('q4u_queue_group_detail').select('queue_id').where('date_serv', dateServ).where('service_point_id', servicePointId))
       .where((w) => {
         w.where('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
-        w.orWhere('p.first_name', 'like', _query)
-        w.orWhere('p.last_name', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query);
       });
 
     if (priorityId) {
@@ -331,8 +337,9 @@ export class QueueModel {
     return sql.whereNull('q.room_id');
   }
 
-  getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any) {
-    return db('q4u_queue as q')
+  getWaitingList(db: knex, dateServ: any, servicePointId: any, limit: any, offset: any, sort: any = '', query = '') {
+    const _query = `%${query}%`;
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview', 'q.is_completed')
@@ -340,17 +347,30 @@ export class QueueModel {
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .where('q.service_point_id', servicePointId)
       .where('q.date_serv', dateServ)
-      // .whereNull('q.room_id')
       .where('q.is_completed', 'N')
+      .where((w) => {
+        w.orWhere('q.hn', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      })
       .whereNot('q.is_cancel', 'Y')
-      .whereNot('q.mark_pending', 'Y')
-      .orderBy('q.queue_id', 'asc')
-      .groupBy('q.queue_id')
+      .whereNot('q.mark_pending', 'Y');
+    if (sort == 'ASC') {
+      sql.orderBy([{ column: 'pr.priority_order', order: 'asc' }, { column: 'q.queue_id', order: 'asc' }]);
+    } else if (sort == 'DESC') {
+      sql.orderBy([{ column: 'pr.priority_order', order: 'desc' }, { column: 'q.queue_id', order: 'asc' }]);
+    } else {
+      sql.orderBy('q.queue_id', 'asc');
+    }
+    sql.groupBy('q.queue_id')
       .limit(limit)
       .offset(offset);
+    return sql;
   }
 
-  getWaitingListTotal(db: knex, dateServ: any, servicePointId: any) {
+  getWaitingListTotal(db: knex, dateServ: any, servicePointId: any, query = '') {
+    const _query = `%${query}%`;
     return db('q4u_queue as q')
       .select(db.raw('count(*) as total'))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -359,13 +379,18 @@ export class QueueModel {
       .where('q.is_completed', 'N')
       .whereNot('q.is_cancel', 'Y')
       .whereNot('q.mark_pending', 'Y')
-      .where('q.date_serv', dateServ);
+      .where('q.date_serv', dateServ)
+      .where((w) => {
+        w.orWhere('q.hn', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      });
     // .whereNull('q.room_id');
   }
 
   getWaitingListQuery(db: knex, dateServ: any, servicePointId: any, query: any) {
-
-    var _query = `%${query}%`;
+    const _query = `%${query}%`;
 
     return db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
@@ -387,14 +412,15 @@ export class QueueModel {
       })
       .orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
-      .limit(50)
+      .limit(50);
   }
 
-  getWorking(db: knex, dateServ: any, servicePointId: any) {
+  getWorking(db: knex, dateServ: any, servicePointId: any, query: any) {
+    const _query = `%${query}%`;
     return db('q4u_queue_detail as qd')
       .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name', 'sp.department_id', 'q.is_completed')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -403,6 +429,12 @@ export class QueueModel {
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('qd.date_serv', dateServ)
       .where('qd.service_point_id', servicePointId)
+      .where((w) => {
+        w.orWhere('q.hn', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      })
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
       .groupByRaw('qd.date_serv, qd.service_point_id, qd.room_id')
@@ -413,7 +445,7 @@ export class QueueModel {
     return db('q4u_queue_group_detail as qd')
       .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color', 'q.is_completed',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color', 'q.is_completed',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -435,7 +467,7 @@ export class QueueModel {
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.queue_interview', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color', 'q.is_completed',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color', 'q.is_completed',
         'r.room_name', 'r.room_number', 'sp.service_point_name', db.raw(`ifnull(qd.update_date,CURRENT_DATE) as update_date`))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -458,7 +490,7 @@ export class QueueModel {
       .select(
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.room_id', 'r.room_name', 'r.room_number',
         'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color', 'sp.service_point_name')
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color', 'sp.service_point_name')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
@@ -469,11 +501,11 @@ export class QueueModel {
   }
 
   searchWorkingHistoryGroup(db: knex, dateServ: any, limit: any, offset: any, servicePointId: any, query: any) {
-    let _query = `%${query}%`;
+    const _query = `%${query}%`;
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -504,7 +536,7 @@ export class QueueModel {
     let sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name')
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -524,7 +556,7 @@ export class QueueModel {
   }
 
   getWorkingHistoryGroupTotal(db: knex, dateServ: any, servicePointId: any) {
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select(db.raw('count(q.queue_id) as total'))
       // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       // .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -540,19 +572,25 @@ export class QueueModel {
     return sql;
   }
 
-  getWorkingHistory(db: knex, dateServ: any, servicePointId: any) {
-    let sql = db('q4u_queue as q')
+  getWorkingHistory(db: knex, dateServ: any, servicePointId: any, query) {
+    const _query = `%${query}%`;
+    const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_number', 'sp.service_point_name', 'q.is_interview')
-      // .innerJoin('q4u_queue as q', 'q.queue_id', 'qd.queue_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .innerJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
       .innerJoin('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
+      .where((w) => {
+        w.orWhere('q.hn', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      })
       .whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
@@ -562,11 +600,12 @@ export class QueueModel {
 
   }
 
-  getPending(db: knex, dateServ: any, servicePointId: any) {
+  getPending(db: knex, dateServ: any, servicePointId: any, query) {
+    const _query = `%${query}%`;
     return db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -576,6 +615,12 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .where('q.mark_pending', 'Y')
+      .where((w) => {
+        w.where('q.hn', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query);
+      })
       .whereNot('q.is_cancel', 'Y')
       .groupByRaw('q.service_point_id, q.date_serv, q.queue_number')
       .orderBy('q.queue_id', 'asc');
@@ -585,7 +630,7 @@ export class QueueModel {
     return db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
-        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.prority_color',
+        'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -794,7 +839,7 @@ export class QueueModel {
   }
 
   getVisitHistoryList(db: knex, dateServe: any, servicePointId, query, limit, offset) {
-    const _query = `%${query}%`
+    const _query = `%${query}%`;
     let sql = db('q4u_queue as q')
       .join('q4u_person as p', 'p.hn', 'q.hn')
       .where('q.date_serv', dateServe);

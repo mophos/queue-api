@@ -26,11 +26,13 @@ const router = (fastify, { }, next) => {
   fastify.post('/', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityName = req.body.priorityName;
     const priorityPrefix = req.body.priorityPrefix;
+    const priorityOrder = req.body.priorityOrder;
     // const priorityColor = req.body.priorityColor;
 
     const data: any = {
       priority_name: priorityName,
       priority_prefix: priorityPrefix,
+      priority_order: priorityOrder
       // priority_color: priorityColor
     };
 
@@ -41,30 +43,29 @@ const router = (fastify, { }, next) => {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
-
-  })
+  });
 
   fastify.put('/:priorityId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityId: any = req.params.priorityId;
     const priorityName = req.body.priorityName;
     const priorityPrefix = req.body.priorityPrefix;
+    const priorityOrder = req.body.priorityOrder;
     // const priorityColor = req.body.priorityColor;
 
     const data: any = {
       priority_name: priorityName,
       priority_prefix: priorityPrefix,
+      priority_order: priorityOrder
       // priority_color: priorityColor
     };
-
     try {
       await priorityModel.update(db, priorityId, data);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
-
-  })
+  });
 
   fastify.delete('/:priorityId', { preHandler: [fastify.authenticate, fastify.verifyAdmin] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const priorityId: any = req.params.priorityId;
