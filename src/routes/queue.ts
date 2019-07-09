@@ -460,7 +460,7 @@ const router = (fastify, { }, next) => {
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
     const sort = req.query.sort;
-    const query = req.query.query;
+    const query = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -588,7 +588,7 @@ const router = (fastify, { }, next) => {
     const departmentId = req.params.departmentId;
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
-    const query = req.query.query;
+    const query = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -605,7 +605,7 @@ const router = (fastify, { }, next) => {
   fastify.get('/working/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
-    const query = req.query.query;
+    const query = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -678,7 +678,7 @@ const router = (fastify, { }, next) => {
   fastify.get('/working/history/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
-    const query = req.query.query;
+    const query = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -694,7 +694,7 @@ const router = (fastify, { }, next) => {
   fastify.get('/pending/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
-    const query = req.query.query;
+    const query = req.query.query || '';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
