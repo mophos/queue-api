@@ -345,61 +345,72 @@ const router = (fastify, { }, next) => {
               const usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
 
               await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
-              var queueNumber = 0;
-              var queueInterview = 0;
+              let queueNumber = 0;
+              let queueInterview = 0;
 
-              var rs1: any;
+              const useHISQueue = process.env.USE_HIS_QUEUE || 'N';
+              let _queueRunning = 0;
+              let strQueueNumber: string = null;
 
-              if (usePriorityQueueRunning === 'Y') {
-                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+              if (useHISQueue === 'Y') {
+                const rsQueue = await hisModel.getHISQueue(dbHIS, hn, dateServ);
+                if (rsQueue.length) {
+                  const queue = rsQueue[0].queue;
+                  strQueueNumber = queue;
+                } else {
+                  strQueueNumber = '000';
+                }
               } else {
-                rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+                let rs1: any;
+
+                if (usePriorityQueueRunning === 'Y') {
+                  rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
+                } else {
+                  rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ);
+                }
+
+                if (rs1.length) {
+                  queueNumber = rs1[0]['current_queue'] + 1;
+                  usePriorityQueueRunning === 'Y'
+                    ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                    : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
+                } else {
+                  queueNumber = 1;
+                  usePriorityQueueRunning === 'Y'
+                    ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
+                    : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
+                }
+
+                // queue interview
+                let rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+
+                if (rs2.length) {
+                  queueInterview = rs2[0]['current_queue'] + 1;
+                  await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
+                } else {
+                  queueInterview = 1;
+                  await queueModel.createServicePointQueueNumber(db, 999, dateServ);
+                }
+
+                _queueRunning = queueNumber;
+
+                const queueDigit = +process.env.QUEUE_DIGIT || 3;
+                let _queueNumber = null;
+
+                if (process.env.ZERO_PADDING === 'Y') {
+                  _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
+                } else {
+                  _queueNumber = queueNumber.toString();
+                }
+
+                if (process.env.USE_PRIORITY_PREFIX === 'Y') {
+                  strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
+                } else {
+                  strQueueNumber = usePriorityQueueRunning === 'Y'
+                    ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
+                    : `${prefixPoint} ${_queueNumber}`;
+                }
               }
-
-              if (rs1.length) {
-                queueNumber = rs1[0]['current_queue'] + 1;
-                usePriorityQueueRunning === 'Y'
-                  ? await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
-                  : await queueModel.updateServicePointQueueNumber(db, servicePointId, dateServ);
-              } else {
-                queueNumber = 1;
-                usePriorityQueueRunning === 'Y'
-                  ? await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ, priorityId)
-                  : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
-              }
-
-              // queue interview
-              var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
-
-              if (rs2.length) {
-                queueInterview = rs2[0]['current_queue'] + 1;
-                await queueModel.updateServicePointQueueNumber(db, 999, dateServ);
-              } else {
-                queueInterview = 1;
-                await queueModel.createServicePointQueueNumber(db, 999, dateServ);
-              }
-
-              const _queueRunning = queueNumber;
-
-              const queueDigit = +process.env.QUEUE_DIGIT || 3;
-              var _queueNumber = null;
-
-              if (process.env.ZERO_PADDING === 'Y') {
-                _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
-              } else {
-                _queueNumber = queueNumber.toString();
-              }
-
-              var strQueueNumber: string = null;
-
-              if (process.env.USE_PRIORITY_PREFIX === 'Y') {
-                strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
-              } else {
-                strQueueNumber = usePriorityQueueRunning === 'Y'
-                  ? `${prefixPoint}${prefixPriority} ${_queueNumber}`
-                  : `${prefixPoint} ${_queueNumber}`;
-              }
-
               const dateCreate = moment().format('YYYY-MM-DD HH:mm:ss');
 
               const qData: any = {};
