@@ -389,10 +389,10 @@ export class QueueModel {
     // .whereNull('q.room_id');
   }
 
-  getWaitingListQuery(db: knex, dateServ: any, servicePointId: any, query: any) {
+  getWaitingListQuery(db: knex, dateServ: any, servicePointId: any, query: any = '', prioityId: any = '') {
     const _query = `%${query}%`;
 
-    return db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -406,13 +406,17 @@ export class QueueModel {
       .whereNot('q.mark_pending', 'Y')
       .where((w) => {
         w.where('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
-        w.orWhere('p.first_name', 'like', _query)
-        w.orWhere('p.last_name', 'like', _query)
-      })
-      .orderBy('q.queue_id', 'asc')
+          .orWhere('q.queue_number', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query);
+      });
+    if (prioityId != '') {
+      sql.where('q.priority_id', prioityId);
+    }
+    sql.orderBy('q.queue_id', 'asc')
       .groupBy('q.queue_id')
       .limit(50);
+    return sql;
   }
 
   getWorking(db: knex, dateServ: any, servicePointId: any, query: any) {
@@ -572,7 +576,7 @@ export class QueueModel {
     return sql;
   }
 
-  getWorkingHistory(db: knex, dateServ: any, servicePointId: any, query) {
+  getWorkingHistory(db: knex, dateServ: any, servicePointId: any, query = '', prioityId = '') {
     const _query = `%${query}%`;
     const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
@@ -590,8 +594,11 @@ export class QueueModel {
           .orWhere('p.first_name', 'like', _query)
           .orWhere('p.last_name', 'like', _query)
           .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
-      })
-      .whereNot('q.mark_pending', 'Y')
+      });
+    if (prioityId != '') {
+      sql.where('q.priority_id', prioityId);
+    }
+    sql.whereNot('q.mark_pending', 'Y')
       .whereNot('q.is_cancel', 'Y')
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(10)
@@ -600,9 +607,9 @@ export class QueueModel {
 
   }
 
-  getPending(db: knex, dateServ: any, servicePointId: any, query) {
+  getPending(db: knex, dateServ: any, servicePointId: any, query: any = '', prioityId: any = '') {
     const _query = `%${query}%`;
-    return db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
@@ -620,10 +627,14 @@ export class QueueModel {
           .orWhere('q.queue_number', 'like', _query)
           .orWhere('p.first_name', 'like', _query)
           .orWhere('p.last_name', 'like', _query);
-      })
-      .whereNot('q.is_cancel', 'Y')
+      });
+    if (prioityId != '') {
+      sql.where('q.priority_id', prioityId);
+    }
+    sql.whereNot('q.is_cancel', 'Y')
       .groupByRaw('q.service_point_id, q.date_serv, q.queue_number')
       .orderBy('q.queue_id', 'asc');
+    return sql;
   }
 
   getPendingByDepartment(db: knex, dateServ: any, departmentId: any) {
