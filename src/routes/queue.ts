@@ -1472,6 +1472,20 @@ const router = (fastify, { }, next) => {
     }
   });
 
+
+  fastify.get('/next-queue/service-point', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const servicePointId = +req.query.servicePointId;
+
+    try {
+      const rs: any = await queueModel.getNextQueue(db, servicePointId);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  });
+
   next();
 
 }
