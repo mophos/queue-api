@@ -923,6 +923,6 @@ export class QueueModel {
       .where('date_serv', dateServ)
       .where('is_cancel', 'N')
       .orderBy('queue_running', 'ASC')
-      .limit(5);
+      .limit(limit);
   }
 }
