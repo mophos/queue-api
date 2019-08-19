@@ -888,7 +888,7 @@ export class QueueModel {
 
   getVisitHistoryTotal(db: knex, dateServe: any, servicePointId, query) {
 
-    const _query = `%${query}%`
+    const _query = `%${query}%`;
     let sql = db('q4u_queue as q')
       .count('*').as('total')
       .join('q4u_person as p', 'p.hn', 'q.hn')
@@ -904,22 +904,23 @@ export class QueueModel {
         w.orWhere('p.last_name', 'like', _query)
         w.orWhere('q.hn', 'like', _query)
         w.orWhere('q.queue_number', 'like', _query)
-      })
+      });
       const _arrQuery = query.split(' ');
       if (_arrQuery.length == 2) {
         sql.where((w) => {
           w.orWhere('p.first_name', 'like', `%${_arrQuery[0]}%`)
           w.orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`)
-        })
+        });
       }
     }
     return sql;
   }
 
-  getNextQueue(db: knex, servicePointId: number, limit: number = 5) {
+  getNextQueue(db: knex, servicePointId: number, dateServ, limit: number = 5) {
     return db('q4u_queue')
       .whereNull('room_id')
       .where('service_point_id', servicePointId)
+      .where('date_serv', dateServ)
       .where('is_cancel', 'N')
       .orderBy('queue_running', 'ASC')
       .limit(5);
