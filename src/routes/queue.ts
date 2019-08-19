@@ -1477,8 +1477,9 @@ const router = (fastify, { }, next) => {
 
     const servicePointId = +req.query.servicePointId;
     const dateServ: any = moment().format('YYYY-MM-DD');
+    const limit = +req.query.limit || 5;
     try {
-      const rs: any = await queueModel.getNextQueue(db, servicePointId, dateServ);
+      const rs: any = await queueModel.getNextQueue(db, servicePointId, dateServ, limit);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
