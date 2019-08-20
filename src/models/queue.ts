@@ -925,6 +925,8 @@ export class QueueModel {
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ)
       .where('is_cancel', 'N')
+      .where('is_completed', 'N')
+      .whereNot('mark_pending', 'Y')
       .orderBy('queue_running', 'ASC')
       .limit(limit);
   }
