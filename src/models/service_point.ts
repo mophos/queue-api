@@ -21,7 +21,7 @@ export class ServicePointModel {
   }
 
   getServicePointIdFromLocalCode(db: knex, localCode: any) {
-    return db(this.tableName).select('service_point_id').where('local_code', localCode).limit(1);
+    return db(this.tableName).select('service_point_id', 'department_id').where('local_code', localCode).limit(1);
   }
 
   getPrefix(db: knex, servicePointId: any) {

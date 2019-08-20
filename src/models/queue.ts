@@ -925,4 +925,19 @@ export class QueueModel {
       .orderBy('queue_running', 'ASC')
       .limit(limit);
   }
+
+  getNextQueueDepartment(db: knex, departmentId: number, dateServ, limit: number = 5) {
+    let sql = db('q4u_queue as q')
+      .join('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .whereNull('q.room_id')
+      .where('sp.department_id', departmentId)
+      .where('q.date_serv', dateServ)
+      .where('q.is_cancel', 'N')
+      .where('q.is_completed', 'N')
+      .whereNot('q.mark_pending', 'Y')
+      .orderBy('q.queue_running', 'ASC')
+      .limit(limit);
+    return sql;
+
+  }
 }

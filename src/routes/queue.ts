@@ -192,6 +192,7 @@ const router = (fastify, { }, next) => {
         // get service point id from mapping
         const rsLocalCode: any = await servicePointModel.getServicePointIdFromLocalCode(db, localCode);
         const servicePointId = rsLocalCode.length ? rsLocalCode[0].service_point_id : null;
+        const departmentId = rsLocalCode.length ? rsLocalCode[0].department_id : null;
 
         if (servicePointId) {
 
@@ -292,10 +293,12 @@ const router = (fastify, { }, next) => {
           const queueId: any = await queueModel.createQueueInfo(db, qData);
 
           const topic = process.env.QUEUE_CENTER_TOPIC;
-          const topicServicePoint = `${topic}/${servicePointId}`;
+          const topicServicePoint = `${process.env.SERVICE_POINT_TOPIC}/${servicePointId}`;
+          const topicDepartment = `${process.env.DEPARTMENT_TOPIC}/${departmentId}`;
 
           fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
-          fastify.mqttClient.publish(topicServicePoint, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicServicePoint, '{"message":"update_visit"}', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicDepartment, '{"message":"update_visit"}', { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
@@ -1480,6 +1483,20 @@ const router = (fastify, { }, next) => {
     const limit = +req.query.limit || 5;
     try {
       const rs: any = await queueModel.getNextQueue(db, servicePointId, dateServ, limit);
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+    }
+  });
+
+  fastify.get('/next-queue/department', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+    const departmentId = +req.query.departmentId;
+    const dateServ: any = moment().format('YYYY-MM-DD');
+    const limit = +req.query.limit || 5;
+    try {
+      const rs: any = await queueModel.getNextQueueDepartment(db, departmentId, dateServ, limit);
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
