@@ -754,8 +754,10 @@ export class QueueModel {
   }
 
   getDuplicatedQueueInfo(db: knex, queueId: any) {
-    return db('q4u_queue')
-      .where('queue_id', queueId)
+    return db('q4u_queue as q')
+      .select('q.*', 'sp.department_id')
+      .join('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
+      .where('q.queue_id', queueId)
       .limit(1);
   }
 
