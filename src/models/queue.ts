@@ -3,7 +3,7 @@ import * as knex from 'knex';
 export class QueueModel {
 
   savePatient(db: knex, hn, title, firstName, lastName, birthdate, sex = '') {
-    var sql = `
+    const sql = `
     INSERT INTO q4u_person(hn, title, first_name, last_name, birthdate, sex)
     VALUES(?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE title=?, first_name=?, last_name=?, birthdate=?, sex=?
@@ -15,7 +15,7 @@ export class QueueModel {
   }
 
   updateServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
-    var sql = db('q4u_queue_number')
+    const sql = db('q4u_queue_number')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ);
 
@@ -66,7 +66,7 @@ export class QueueModel {
   }
 
   createServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
-    var data: any = {};
+    const data: any = {};
     data.service_point_id = servicePointId;
     data.date_serv = dateServ;
     data.current_queue = 1;
@@ -90,7 +90,7 @@ export class QueueModel {
   // }
 
   checkServicePointQueueNumber(db: knex, servicePointId: any, dateServ: any, priorityId: any = null) {
-    var sql = db('q4u_queue_number')
+    const sql = db('q4u_queue_number')
       .where('service_point_id', servicePointId)
       .where('date_serv', dateServ);
 
@@ -136,7 +136,7 @@ export class QueueModel {
   // }
 
   searchQueueByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any, query: any) {
-    let _query = `%${query}%`;
+    const _query = `%${query}%`;
     return db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
@@ -151,7 +151,7 @@ export class QueueModel {
       .where('q.mark_pending', 'N')
       .where((w) => {
         w.where('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query);
       })
       .whereNot('q.is_cancel', 'Y')
       .orderBy('q.queue_id', 'asc')
@@ -162,7 +162,7 @@ export class QueueModel {
   }
 
   searchQueueByDepartmentIdTotal(db: knex, dateServ: any, departmentId: any, query: any) {
-    let _query = `%${query}%`;
+    const _query = `%${query}%`;
     return db('q4u_queue as q')
       .select(db.raw('count(*) as total'))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
@@ -173,7 +173,7 @@ export class QueueModel {
       .where('q.mark_pending', 'N')
       .where((w) => {
         w.where('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query);
       })
       .whereNot('q.is_cancel', 'Y')
       .where('q.date_serv', dateServ);
@@ -210,7 +210,7 @@ export class QueueModel {
   }
 
   getQueueHistoryByDepartmentId(db: knex, dateServ: any, departmentId: any, limit: any, offset: any) {
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview',
@@ -263,7 +263,7 @@ export class QueueModel {
   }
 
   getWaitingGroupList(db: knex, dateServ: any, servicePointId: any, priorityId: any, limit: any, offset: any) {
-    var sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number', 'q.queue_running',
         'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
         'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
@@ -320,7 +320,7 @@ export class QueueModel {
   }
 
   getWaitingGroupListTotal(db: knex, dateServ: any, servicePointId: any, priorityId: any) {
-    var sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select(db.raw('count(*) as total'))
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
@@ -421,7 +421,7 @@ export class QueueModel {
 
   getWorking(db: knex, dateServ: any, servicePointId: any, query: any) {
     const _query = `%${query}%`;
-    var sql = db('q4u_queue_detail as qd')
+    const sql = db('q4u_queue_detail as qd')
       .select('qd.service_point_id', 'q.queue_interview', 'qd.date_serv as queue_date', 'qd.last_queue', 'qd.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'qd.queue_id', 'q.date_serv', 'q.time_serv', 'qd.update_date', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
@@ -474,7 +474,7 @@ export class QueueModel {
 
   getWorkingDepartment(db: knex, dateServ: any, departmentId: any) {
 
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.queue_interview', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color', 'q.is_completed',
@@ -512,7 +512,7 @@ export class QueueModel {
 
   searchWorkingHistoryGroup(db: knex, dateServ: any, limit: any, offset: any, servicePointId: any, query: any) {
     const _query = `%${query}%`;
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
@@ -529,9 +529,9 @@ export class QueueModel {
       .whereNot('q.is_cancel', 'Y')
       .where((w) => {
         w.where('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
-        w.orWhere('p.first_name', 'like', _query)
-        w.orWhere('p.last_name', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query)
+          .orWhere('p.first_name', 'like', _query)
+          .orWhere('p.last_name', 'like', _query);
       })
       // .groupByRaw('qd.date_serv, qd.service_point_id')
       .limit(limit)
@@ -543,7 +543,7 @@ export class QueueModel {
   }
 
   getWorkingHistoryGroup(db: knex, dateServ: any, servicePointId: any) {
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .select('q.service_point_id', 'q.date_serv as queue_date', 'qgd.room_id',
         'q.queue_number', 'q.queue_running', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
@@ -577,7 +577,7 @@ export class QueueModel {
       .where('q.date_serv', dateServ)
       .where('q.service_point_id', servicePointId)
       .whereNot('q.mark_pending', 'Y')
-      .whereNot('q.is_cancel', 'Y')
+      .whereNot('q.is_cancel', 'Y');
     // .groupByRaw('qd.date_serv, qd.service_point_id')
     return sql;
   }
@@ -695,7 +695,7 @@ export class QueueModel {
   }
 
   updateCurrentQueue(db: knex, servicePointId, dateServ, queueId, roomId) {
-    var sql = `
+    const sql = `
     INSERT INTO q4u_queue_detail(service_point_id, date_serv, queue_id, room_id)
     VALUES(?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE queue_id=?
@@ -704,7 +704,7 @@ export class QueueModel {
   }
 
   // updateCurrentQueueGroup(db: knex, servicePointId, dateServ, queueId, roomId, queueRunning) {
-  //   var sql = `
+  //   const sql = `
   //   INSERT INTO q4u_queue_group_detail(service_point_id, date_serv, queue_id, room_id, queue_running)
   //   VALUES(?, ?, ?, ?, ?)
   //   ON DUPLICATE KEY UPDATE queue_id=?
@@ -741,7 +741,7 @@ export class QueueModel {
   }
 
   getCurrentVisitOnQueue(db: knex, dateServ: any) {
-    var sql = db('q4u_queue')
+    const sql = db('q4u_queue')
       .select('vn')
       .where('date_serv', dateServ);
     return sql;
@@ -767,9 +767,9 @@ export class QueueModel {
     select a.*, r.room_name, r.room_number, q.queue_number, sp.service_point_name,
      p.title, p.first_name, p.last_name, p.hn,
     (
-      select count(*) as total 
-      from q4u_queue as qx 
-      where qx.service_point_id=a.service_point_id 
+      select count(*) as total
+      from q4u_queue as qx
+      where qx.service_point_id=a.service_point_id
       and qx.room_id is null
       and qx.date_serv=?
       and qx.is_cancel != 'Y'
@@ -777,7 +777,7 @@ export class QueueModel {
     from (
     select qd1.*
     from q4u_queue_detail as qd1
-    left join q4u_queue_detail as qd2 on 
+    left join q4u_queue_detail as qd2 on
     (qd1.service_point_id=qd2.service_point_id and qd1.update_date<qd2.update_date)
     where qd2.update_date is null
     ) as a
@@ -800,10 +800,10 @@ export class QueueModel {
     (select hosname from q4u_system limit 1) as hosname,
     (select hoscode from q4u_system limit 1) as hosid,
     (
-      select count(*) from q4u_queue where queue_id<? and room_id is null 
+      select count(*) from q4u_queue where queue_id<? and room_id is null
       and service_point_id=q.service_point_id and date_serv=q.date_serv
     ) as remain_queue, p.priority_name
-    from q4u_queue as q 
+    from q4u_queue as q
     inner join q4u_service_points as sp on sp.service_point_id=q.service_point_id
     inner join q4u_person as ps on ps.hn=q.hn
     left join q4u_priorities as p on p.priority_id=q.priority_id
@@ -814,8 +814,8 @@ export class QueueModel {
 
   getResponseQueueInfo(db: knex, queueIds: any[]) {
 
-    var sqlHospname = db('q4u_system').select('hosname').as('hosname');
-    var sqlHoscode = db('q4u_system').select('hoscode').as('hosid');
+    const sqlHospname = db('q4u_system').select('hosname').as('hosname');
+    const sqlHoscode = db('q4u_system').select('hoscode').as('hosid');
 
     return db('q4u_queue as q')
       .select('q.hn', 'q.vn', 'q.queue_id', 'q.queue_number', 'q.queue_interview', 'q.queue_running', 'q.date_serv',
@@ -860,7 +860,7 @@ export class QueueModel {
 
   getVisitHistoryList(db: knex, dateServe: any, servicePointId, query, limit, offset) {
     const _query = `%${query}%`;
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .join('q4u_person as p', 'p.hn', 'q.hn')
       .where('q.date_serv', dateServe);
 
@@ -871,16 +871,16 @@ export class QueueModel {
     if (query) {
       sql.where((w) => {
         w.orWhere('p.first_name', 'like', _query)
-        w.orWhere('p.last_name', 'like', _query)
-        w.orWhere('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
-      })
+          .orWhere('p.last_name', 'like', _query)
+          .orWhere('q.hn', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query);
+      });
       const _arrQuery = query.split(' ');
       if (_arrQuery.length == 2) {
         sql.where((w) => {
           w.orWhere('p.first_name', 'like', `%${_arrQuery[0]}%`)
-          w.orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`)
-        })
+            .orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`);
+        });
       }
     }
     sql.orderBy('q.queue_id', 'DESC')
@@ -892,7 +892,7 @@ export class QueueModel {
   getVisitHistoryTotal(db: knex, dateServe: any, servicePointId, query) {
 
     const _query = `%${query}%`;
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .count('*').as('total')
       .join('q4u_person as p', 'p.hn', 'q.hn')
       .where('q.date_serv', dateServe);
@@ -904,15 +904,15 @@ export class QueueModel {
     if (query) {
       sql.where((w) => {
         w.orWhere('p.first_name', 'like', _query)
-        w.orWhere('p.last_name', 'like', _query)
-        w.orWhere('q.hn', 'like', _query)
-        w.orWhere('q.queue_number', 'like', _query)
+          .orWhere('p.last_name', 'like', _query)
+          .orWhere('q.hn', 'like', _query)
+          .orWhere('q.queue_number', 'like', _query);
       });
       const _arrQuery = query.split(' ');
       if (_arrQuery.length == 2) {
         sql.where((w) => {
           w.orWhere('p.first_name', 'like', `%${_arrQuery[0]}%`)
-          w.orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`)
+            .orWhere('p.last_name', 'like', `%${_arrQuery[1]}%`);
         });
       }
     }
@@ -932,7 +932,7 @@ export class QueueModel {
   }
 
   getNextQueueDepartment(db: knex, departmentId: number, dateServ, limit: number = 5) {
-    let sql = db('q4u_queue as q')
+    const sql = db('q4u_queue as q')
       .join('q4u_service_points as sp', 'sp.service_point_id', 'q.service_point_id')
       .whereNull('q.room_id')
       .where('sp.department_id', departmentId)

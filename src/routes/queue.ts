@@ -3,7 +3,7 @@ import * as Knex from 'knex';
 import * as fastify from 'fastify';
 import * as HttpStatus from 'http-status-codes';
 import * as moment from 'moment';
-const request = require('request')
+const request = require('request');
 
 import { QueueModel } from '../models/queue';
 import { EzhospModel } from '../models/his/ezhosp';
@@ -24,9 +24,9 @@ const serviceRoomModel = new ServiceRoomModel();
 
 const hisType = process.env.HIS_TYPE || 'universal';
 
-// ห้ามแก้ไข // 
+// ห้ามแก้ไข //
 
-var hisModel: any;
+let hisModel: any;
 switch (hisType) {
   case 'ezhosp':
     hisModel = new EzhospModel();
@@ -52,10 +52,10 @@ switch (hisType) {
 
 const router = (fastify, { }, next) => {
 
-  var dbHIS: Knex = fastify.dbHIS;
-  var db: Knex = fastify.db;
+  const dbHIS: Knex = fastify.dbHIS;
+  const db: Knex = fastify.db;
 
-  var padStart = function padStart(str, targetLength, padString = '0') {
+  const padStart = function padStart(str, targetLength, padString = '0') {
     targetLength = targetLength >> 0;
     if (str.length >= targetLength) {
       return str;
@@ -71,30 +71,30 @@ const router = (fastify, { }, next) => {
   fastify.get('/test', async (req: fastify.Request, reply: fastify.Reply) => {
     try {
       const rs: any = await hisModel.testConnection(dbHIS);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: 'Welcome to Q4U!' })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: 'Welcome to Q4U!' });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message });
     }
-  })
+  });
 
   fastify.post('/patient/info', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
-    var cid = req.body.cid;
+    const cid = req.body.cid;
 
     if (cid) {
       try {
         const rs: any = await hisModel.getPatientInfo(dbHIS, cid);
         if (rs.length) {
-          var data = rs[0];
-          var hn = data.hn;
-          var firstName = data.first_name;
-          var lastName = data.last_name;
-          var birthDate = data.birthdate;
-          var title = data.title;
-          var sex = data.sex;
+          const data = rs[0];
+          const hn = data.hn;
+          const firstName = data.first_name;
+          const lastName = data.last_name;
+          const birthDate = data.birthdate;
+          const title = data.title;
+          const sex = data.sex;
 
-          var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
-          var patient = {
+          const thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
+          const patient = {
             hn: hn,
             firstName: firstName,
             lastName: lastName,
@@ -106,20 +106,20 @@ const router = (fastify, { }, next) => {
 
           console.log(patient);
 
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient });
 
         } else {
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.NOT_FOUND, message: 'ไม่พบข้อมูล' });
         }
       } catch (error) {
         fastify.log.error(error);
-        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message });
       }
     } else {
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' });
     }
 
-  })
+  });
 
   fastify.get('/his-visit', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -133,8 +133,8 @@ const router = (fastify, { }, next) => {
       const rsLocalCode: any = await servicePointModel.getLocalCode(db);
       const rsCurrentOnQueue: any = await queueModel.getCurrentVisitOnQueue(db, dateServ);
 
-      var localCodes: any = [];
-      var vn: any = [];
+      const localCodes: any = [];
+      const vn: any = [];
 
       rsLocalCode.forEach(v => {
         localCodes.push(v.local_code);
@@ -147,12 +147,12 @@ const router = (fastify, { }, next) => {
       const rsTotal: any = await hisModel.getVisitTotal(dbHIS, dateServ, localCodes, vn, servicePointCode, query);
       const rs: any = await hisModel.getVisitList(dbHIS, dateServ, localCodes, vn, servicePointCode, query, limit, offset);
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/his-visit-history', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -166,12 +166,12 @@ const router = (fastify, { }, next) => {
       const rsTotal: any = await queueModel.getVisitHistoryTotal(db, dateServ, servicePointId, query);
       const rs: any = await queueModel.getVisitHistoryList(db, dateServ, servicePointId, query, limit, offset);
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.post('/register', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const hn = req.body.hn;
@@ -197,31 +197,32 @@ const router = (fastify, { }, next) => {
         if (servicePointId) {
 
           // get prefix
+          let strQueueNumber: string = null;
           const rsPriorityPrefix: any = await priorityModel.getPrefix(db, priorityId);
           const prefixPriority: any = rsPriorityPrefix[0].priority_prefix || '0';
           const rsPointPrefix: any = await servicePointModel.getPrefix(db, servicePointId);
           const prefixPoint: any = rsPointPrefix[0].prefix || '0';
 
           await queueModel.savePatient(db, hn, title, firstName, lastName, birthDate, sex);
-          var queueNumber = 0;
-          var queueInterview = 0;
+          let queueNumber = 0;
+          let queueInterview = 0;
 
-          var usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
-          var useHISQueue = process.env.USE_HIS_QUEUE || 'N';
+          const usePriorityQueueRunning = rsPointPrefix[0].priority_queue_running || 'N';
+          const useHISQueue = process.env.USE_HIS_QUEUE || 'N';
 
-          var _queueRunning = 0;
+          let _queueRunning = 0;
 
           if (useHISQueue === 'Y') {
-            var rsQueue = await hisModel.getHISQueue(dbHIS, hn, dateServ);
+            const rsQueue = await hisModel.getHISQueue(dbHIS, hn, dateServ);
             if (rsQueue.length) {
-              var queue = rsQueue[0].queue;
+              const queue = rsQueue[0].queue;
               strQueueNumber = queue;
             } else {
               strQueueNumber = '000';
             }
           } else {
             // queue number
-            var rs1: any;
+            let rs1: any;
 
             if (usePriorityQueueRunning === 'Y') {
               rs1 = await queueModel.checkServicePointQueueNumber(db, servicePointId, dateServ, priorityId);
@@ -244,7 +245,7 @@ const router = (fastify, { }, next) => {
             _queueRunning = queueNumber;
 
             const queueDigit = +process.env.QUEUE_DIGIT || 3;
-            var _queueNumber = null;
+            let _queueNumber = null;
 
             if (process.env.ZERO_PADDING === 'Y') {
               _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
@@ -252,7 +253,7 @@ const router = (fastify, { }, next) => {
               _queueNumber = queueNumber.toString();
             }
 
-            var strQueueNumber: string = null;
+
 
             if (process.env.USE_PRIORITY_PREFIX === 'Y') {
               strQueueNumber = `${prefixPoint}${prefixPriority} ${_queueNumber}`;
@@ -264,7 +265,7 @@ const router = (fastify, { }, next) => {
 
           }
 
-          var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+          const rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
           // queue interview
           if (rs2.length) {
@@ -303,18 +304,18 @@ const router = (fastify, { }, next) => {
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
         } else {
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบรหัสแผนกที่ต้องการ' })
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบรหัสแผนกที่ต้องการ' });
         }
 
       } catch (error) {
         fastify.log.error(error);
-        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
       }
 
     } else {
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' });
     }
-  })
+  });
 
   fastify.post('/prepare/register', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const hn = req.body.hn;
@@ -323,7 +324,7 @@ const router = (fastify, { }, next) => {
 
     if (hn) {
       // get patient info
-      var rsp: any = await hisModel.getPatientInfoWithHN(dbHIS, hn);
+      const rsp: any = await hisModel.getPatientInfoWithHN(dbHIS, hn);
 
       if (rsp.length) {
         const vn = moment().format('x');
@@ -385,7 +386,7 @@ const router = (fastify, { }, next) => {
                 }
 
                 // queue interview
-                let rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+                const rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
                 if (rs2.length) {
                   queueInterview = rs2[0]['current_queue'] + 1;
@@ -440,16 +441,16 @@ const router = (fastify, { }, next) => {
               reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, hn: hn, vn: vn, queueNumber: queueNumber, queueId: queueId[0] });
 
             } else {
-              reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบรหัสแผนกที่ต้องการ' })
+              reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบรหัสแผนกที่ต้องการ' });
             }
 
           } catch (error) {
             fastify.log.error(error);
-            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
           }
 
         } else {
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' })
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ข้อมูลไม่ครบ' });
         }
 
       } else {
@@ -484,7 +485,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -500,7 +501,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -516,12 +517,12 @@ const router = (fastify, { }, next) => {
 
       const rs: any = await queueModel.getWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset);
       const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/waiting-group/search/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -530,36 +531,36 @@ const router = (fastify, { }, next) => {
 
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
-    const query = req.query.query || ''
+    const query = req.query.query || '';
     try {
       console.log(query);
 
       const dateServ: any = moment().format('YYYY-MM-DD');
       const rs: any = await queueModel.searchWaitingGroupList(db, dateServ, servicePointId, priorityId, limit, offset, query);
       const rsTotal: any = await queueModel.getWaitingGroupListTotal(db, dateServ, servicePointId, priorityId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/history-group/search/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     const servicePointId = req.params.servicePointId;
     const limit = +req.query.limit || 20;
     const offset = +req.query.offset || 0;
-    const query = req.query.query || ''
+    const query = req.query.query || '';
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
       const rs: any = await queueModel.searchWorkingHistoryGroup(db, dateServ, limit, offset, servicePointId, query);
       const rsTotal: any = await queueModel.getWorkingHistoryGroupTotal(db, dateServ, servicePointId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/department/:departmentId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -576,9 +577,9 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/department/history/:departmentId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -591,12 +592,12 @@ const router = (fastify, { }, next) => {
 
       const rs: any = await queueModel.getQueueHistoryByDepartmentId(db, dateServ, departmentId, limit, offset);
       const rsTotal: any = await queueModel.getQueueHistoryByDepartmentIdTotal(db, dateServ, departmentId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/department/search/:departmentId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -610,12 +611,12 @@ const router = (fastify, { }, next) => {
 
       const rs: any = await queueModel.searchQueueByDepartmentId(db, dateServ, departmentId, limit, offset, query);
       const rsTotal: any = await queueModel.searchQueueByDepartmentIdTotal(db, dateServ, departmentId, query);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs, total: rsTotal[0].total });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/working/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -629,7 +630,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -641,12 +642,12 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getWorkingGroup(db, dateServ, servicePointId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/working/department/:departmentId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -656,24 +657,24 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getWorkingDepartment(db, dateServ, departmentId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/all-queue/active', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
       const rs: any = await queueModel.getAllQueueActive(db, dateServ);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/working/history-group/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -683,12 +684,12 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getWorkingHistoryGroup(db, dateServ, servicePointId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/working/history/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -703,9 +704,9 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.get('/pending/:servicePointId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -720,7 +721,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -734,7 +735,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -744,10 +745,10 @@ const router = (fastify, { }, next) => {
 
     try {
       await queueModel.markInterview(db, queueId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -863,7 +864,7 @@ const router = (fastify, { }, next) => {
               : await queueModel.createServicePointQueueNumber(db, servicePointId, dateServ);
           }
 
-          var rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
+          const rs2 = await queueModel.checkServicePointQueueNumber(db, 999, dateServ);
 
           // queue interview
           if (rs2.length) {
@@ -879,7 +880,7 @@ const router = (fastify, { }, next) => {
           const queueDigit = +process.env.QUEUE_DIGIT || 3;
           // const _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
 
-          var _queueNumber = null;
+          let _queueNumber = null;
 
           if (process.env.ZERO_PADDING === 'Y') {
             _queueNumber = padStart(queueNumber.toString(), queueDigit, '0');
@@ -930,9 +931,9 @@ const router = (fastify, { }, next) => {
       }
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
-  })
+  });
 
   fastify.post('/caller/:queueId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -942,8 +943,8 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-    var isInterview = 'N';
-    var departmentId: any;
+    let isInterview = 'N';
+    let departmentId: any;
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -952,11 +953,10 @@ const router = (fastify, { }, next) => {
       await queueModel.removeCurrentQueue(db, servicePointId, dateServ, queueId);
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
 
-      const queueDetail = await queueModel.getDuplicatedQueueInfo(db, queueId) // get queue_running
+      const queueDetail = await queueModel.getDuplicatedQueueInfo(db, queueId); // get queue_running
       if (queueDetail.length) {
-        var queueRunning = queueDetail[0].queue_running || 0;
-
-        var queueData = [];
+        const queueRunning = queueDetail[0].queue_running || 0;
+        const queueData = [];
 
         queueData.push({
           service_point_id: servicePointId,
@@ -981,7 +981,7 @@ const router = (fastify, { }, next) => {
 
       // Send notify to H4U Server
 
-      var _queueIds = [];
+      const _queueIds = [];
       _queueIds.push(queueId);
 
       const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
@@ -1040,7 +1040,7 @@ const router = (fastify, { }, next) => {
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1050,20 +1050,20 @@ const router = (fastify, { }, next) => {
     const servicePointId = req.body.servicePointId;
     const roomId = req.body.roomId;
     const roomNumber = req.body.roomNumber;
-    var queues = req.body.queue;
+    const queues = req.body.queue;
     const isCompleted = req.body.isCompleted;
     // const queueRunning = req.body.queueRunning;
 
-    let queueIds: any = [];
-    let queueData: any = [];
-    let queueNumber: any = [];
+    const queueIds: any = [];
+    const queueData: any = [];
+    const queueNumber: any = [];
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
-      var _queues = Array.isArray(queues) ? queues : [queues];
+      const _queues = Array.isArray(queues) ? queues : [queues];
 
       _queues.forEach((v: any) => {
-        queueIds.push(v.queue_id)
+        queueIds.push(v.queue_id);
         queueData.push({
           service_point_id: servicePointId,
           date_serv: dateServ,
@@ -1138,7 +1138,7 @@ const router = (fastify, { }, next) => {
         roomNumber: roomNumber,
         servicePointId: servicePointId,
         roomId: roomId
-      }
+      };
       // console.log(payload);
 
       fastify.mqttClient.publish(globalTopic, 'update visit', { qos: 0, retain: false });
@@ -1149,7 +1149,7 @@ const router = (fastify, { }, next) => {
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1166,7 +1166,7 @@ const router = (fastify, { }, next) => {
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
-      var queueData = [];
+      const queueData = [];
 
       queueData.push({
         service_point_id: servicePointId,
@@ -1195,7 +1195,7 @@ const router = (fastify, { }, next) => {
 
       // Send notify to H4U Server
 
-      var _queueIds = [];
+      const _queueIds = [];
       _queueIds.push(queueId);
 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
@@ -1246,7 +1246,7 @@ const router = (fastify, { }, next) => {
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1259,7 +1259,7 @@ const router = (fastify, { }, next) => {
     const roomNumber = req.body.roomNumber;
     const queueNumber = req.body.queueNumber;
     const isCompleted = req.body.isCompleted;
-    var isInterview = 'N';
+    let isInterview = 'N';
 
     try {
       const dateServ: any = moment().format('YYYY-MM-DD');
@@ -1269,8 +1269,8 @@ const router = (fastify, { }, next) => {
       await queueModel.updateCurrentQueue(db, servicePointId, dateServ, queueId, roomId);
       await queueModel.markUnPending(db, queueId);
 
-      var rsRoom: any = await serviceRoomModel.info(db, roomId);
-      var roomName = rsRoom.length ? rsRoom[0].room_name : null;
+      const rsRoom: any = await serviceRoomModel.info(db, roomId);
+      const roomName = rsRoom.length ? rsRoom[0].room_name : null;
 
       if (isCompleted === 'N') {
         isInterview = 'Y';
@@ -1279,12 +1279,11 @@ const router = (fastify, { }, next) => {
         await queueModel.markCompleted(db, queueId);
       }
 
-      var _queueIds = [];
+      const _queueIds = [];
       _queueIds.push(queueId);
 
       const rsQueue: any = await queueModel.getResponseQueueInfo(db, _queueIds);
       // Send notify to H4U Server
-      // 
       if (process.env.ENABLE_Q4U.toUpperCase() === 'Y') {
 
         if (rsQueue.length) {
@@ -1335,7 +1334,7 @@ const router = (fastify, { }, next) => {
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1361,15 +1360,15 @@ const router = (fastify, { }, next) => {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
         servicePointId: servicePointId
-      }
+      };
 
       fastify.mqttClient.publish(servicePointTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1386,7 +1385,7 @@ const router = (fastify, { }, next) => {
 
     try {
 
-      var queueData = [];
+      const queueData = [];
 
       queueData.push({
         service_point_id: servicePointId,
@@ -1405,15 +1404,15 @@ const router = (fastify, { }, next) => {
         queueNumber: queueNumber,
         roomNumber: roomNumber,
         servicePointId: servicePointId
-      }
+      };
 
       fastify.mqttClient.publish(groupTopic, JSON.stringify(payload), { qos: 0, retain: false });
 
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
 
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1422,10 +1421,10 @@ const router = (fastify, { }, next) => {
     const currentDate = moment().format('YYYY-MM-DD');
     try {
       const rs: any = await queueModel.getCurrentQueueList(db, currentDate);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs[0] })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs[0] });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1435,10 +1434,10 @@ const router = (fastify, { }, next) => {
 
     try {
       await queueModel.markCancel(db, queueId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1446,10 +1445,10 @@ const router = (fastify, { }, next) => {
 
     try {
       const rs: any = await servicePointModel.list(db);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1460,7 +1459,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1471,7 +1470,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
   fastify.get('/sound/service-room-department', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
@@ -1481,7 +1480,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1496,7 +1495,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
@@ -1510,12 +1509,12 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) });
     }
   });
 
   next();
 
-}
+};
 
 module.exports = router;
