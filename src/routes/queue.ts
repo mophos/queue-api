@@ -912,11 +912,16 @@ const router = (fastify, { }, next) => {
 
           newQueueId = await queueModel.createQueueInfo(db, qData);
 
-          const servicePointTopic = process.env.SERVICE_POINT_TOPIC + '/' + servicePointId;
           const topic = process.env.QUEUE_CENTER_TOPIC;
-
-          fastify.mqttClient.publish(servicePointTopic, 'update visit', { qos: 0, retain: false });
+          const topicServicePoint = `${process.env.SERVICE_POINT_TOPIC}/${rsInfo[0].service_point_id}`;
+          const topicServicePoint2 = `${process.env.SERVICE_POINT_TOPIC}/${servicePointId}`;
+          const topicDepartment = `${process.env.DEPARTMENT_TOPIC}/${rsInfo[0].department_id}`;
+          const topicDepartment2 = `${process.env.DEPARTMENT_TOPIC}/${rsServicePoint[0].department_id}`;
           fastify.mqttClient.publish(topic, 'update visit', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicServicePoint, '{"message":"update_visit"}', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicServicePoint2, '{"message":"update_visit"}', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicDepartment, '{"message":"update_visit"}', { qos: 0, retain: false });
+          fastify.mqttClient.publish(topicDepartment2, '{"message":"update_visit"}', { qos: 0, retain: false });
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, queueNumber: strQueueNumber, queueId: newQueueId[0] });
 
