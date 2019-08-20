@@ -717,6 +717,16 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getPending(db, dateServ, servicePointId, query, prioityId);
+
+      const topicServicePoint = `${process.env.SERVICE_POINT_TOPIC}/${servicePointId}`;
+      const topicServicePoint2 = `${process.env.SERVICE_POINT_TOPIC}/${rs[0].pending_to_service_point_id}`;
+      const topicDepartment = `${process.env.DEPARTMENT_TOPIC}/${rs[0].department_id}`;
+      const topicDepartment2 = `${process.env.DEPARTMENT_TOPIC}/${rs[0].pending_to_department_id}`;
+      fastify.mqttClient.publish(topicServicePoint, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicServicePoint2, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicDepartment, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicDepartment2, '{"message":"update_visit"}', { qos: 0, retain: false });
+
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
@@ -732,12 +742,21 @@ const router = (fastify, { }, next) => {
       const dateServ: any = moment().format('YYYY-MM-DD');
 
       const rs: any = await queueModel.getPendingByDepartment(db, dateServ, departmentId);
-      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+
+      const topicServicePoint = `${process.env.SERVICE_POINT_TOPIC}/${rs[0].service_point_id}`;
+      const topicServicePoint2 = `${process.env.SERVICE_POINT_TOPIC}/${rs[0].pending_to_service_point_id}`;
+      const topicDepartment = `${process.env.DEPARTMENT_TOPIC}/${departmentId}`;
+      const topicDepartment2 = `${process.env.DEPARTMENT_TOPIC}/${rs[0].pending_to_department_id}`;
+      fastify.mqttClient.publish(topicServicePoint, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicServicePoint2, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicDepartment, '{"message":"update_visit"}', { qos: 0, retain: false });
+      fastify.mqttClient.publish(topicDepartment2, '{"message":"update_visit"}', { qos: 0, retain: false });
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs });
     } catch (error) {
       fastify.log.error(error);
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
-  })
+  });
 
   fastify.put('/interview/marked/:queueId', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 

@@ -616,10 +616,11 @@ export class QueueModel {
   getPending(db: knex, dateServ: any, servicePointId: any, query: any = '', prioityId: any = '') {
     const _query = `%${query}%`;
     const sql = db('q4u_queue as q')
-      .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
+      .select('q.service_point_id', 'q.pending_to_service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
-        'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
+        'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name',
+        'sp.department_id', 'sp2.department_id as pending_to_department_id')
       .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
       .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
       .leftJoin('q4u_service_rooms as r', 'r.room_id', 'q.room_id')
@@ -645,7 +646,7 @@ export class QueueModel {
 
   getPendingByDepartment(db: knex, dateServ: any, departmentId: any) {
     return db('q4u_queue as q')
-      .select('q.service_point_id', 'q.date_serv as queue_date', 'q.room_id',
+      .select('q.service_point_id', 'q.pending_to_service_point_id', 'q.date_serv as queue_date', 'q.room_id',
         'q.queue_number', 'q.hn', 'q.vn', 'q.queue_id', 'q.queue_interview', 'q.date_serv', 'q.time_serv', 'q.date_update', 'p.title', 'p.first_name', 'p.last_name',
         'p.birthdate', 'pr.priority_name', 'pr.priority_id', 'pr.priority_color',
         'r.room_name', 'r.room_id', 'r.room_number', 'sp.service_point_name', 'sp2.service_point_name as pending_to_service_point_name')
