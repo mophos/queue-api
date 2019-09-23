@@ -945,4 +945,26 @@ export class QueueModel {
     return sql;
 
   }
+  
+  //Ubonket10 
+  getCancel(db: knex, dateServ: any, servicePointId: any) {
+    return db('q4u_queue as q')
+      .select('q.queue_id', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
+        'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
+        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .where('q.service_point_id', servicePointId)
+      .where('q.is_cancel', 'Y')
+      .where('q.date_serv', dateServ);
+    // .whereNull('q.room_id');
+  }
+
+  //Ubonket10 
+  noCancel(db: knex, queueId) {
+    return db('q4u_queue')
+      .where('queue_id', queueId)
+      .update({ is_cancel: 'N' });
+  }
+
 }
