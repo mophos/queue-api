@@ -38,7 +38,7 @@ const router = (fastify, { }, next) => {
           const vn: any = info.vn;
           const priorityName: any = info.priority_name;
           const dateServ: any = moment(info.date_serv).format('YYYYMMDD');
-          const timeServ: any = moment(info.time_serv, "HH:mm:ss").format('HHmm');
+          const timeServ: any = moment(info.time_serv, 'HH:mm:ss').format('HHmm');
           const dateCreated: any = moment(info.date_create).locale('th').format('DD/MM/YYYY HH:mm');
           const localCode: any = info.local_code;
           const qrcode = await QRCode.toDataURL(`${hosid}#${process.env.Q4U_NOTIFY_TOKEN}#${hn}#${localCode}#${queueNumber}#${queueWithoutPrefix}#${dateServ}#${timeServ}#${servicePointName}#${priorityName}`);

@@ -29,5 +29,59 @@ export class KioskModel {
     });
   }
 
+  triggerGet(url, hn, cid, localCode, servicePointId) {
+    return new Promise((resolve: any, reject: any) => {
+      const options = {
+        method: 'GET',
+        url: `${url}?hn=${hn}&cid=${cid}&localCode=${localCode}&servicePointId=${servicePointId}`,
+        agentOptions: {
+          rejectUnauthorized: false
+        },
+        headers:
+        {
+          'content-type': 'text/json'
+        }
+      };
+
+      request(options, function (error, response, body) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(body);
+        }
+      });
+    });
+  }
+
+  triggerPOST(url, hn, cid, localCode, servicePointId) {
+    return new Promise((resolve: any, reject: any) => {
+      const options = {
+        method: 'POST',
+        url: `${url}`,
+        agentOptions: {
+          rejectUnauthorized: false
+        },
+        headers:
+        {
+          'content-type': 'text/json'
+        },
+        body: {
+          hn: hn,
+          cid: cid,
+          localCode: localCode,
+          servicePointId: servicePointId
+        }
+      };
+
+      request(options, function (error, response, body) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(body);
+        }
+      });
+    });
+  }
+
 
 }
