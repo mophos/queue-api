@@ -14,9 +14,9 @@ import { HomcModel } from '../models/his/homc';
 const hisType = process.env.HIS_TYPE || 'universal';
 
 const kioskModel = new KioskModel();
-// ห้ามแก้ไข // 
+// ห้ามแก้ไข //
 
-var hisModel: any;
+let hisModel: any;
 switch (hisType) {
   case 'ezhosp':
     hisModel = new EzhospModel();
@@ -42,7 +42,7 @@ switch (hisType) {
 
 const router = (fastify, { }, next) => {
 
-  var db: Knex = fastify.db;
+  const db: Knex = fastify.db;
 
   // send from smartcard
   fastify.post('/profile', async (req: fastify.Request, reply: fastify.Reply) => {
@@ -60,7 +60,7 @@ const router = (fastify, { }, next) => {
         const lname = req.body.lname;
         const birthDate = req.body.birthDate;
 
-        const topic = `kiosk/${kioskId}`
+        const topic = `kiosk/${kioskId}`;
         const obj = {
           cid: cid,
           fullname: `${title}${fname} ${lname}`,
@@ -108,7 +108,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
     }
 
-  })
+  });
   // ===============
   fastify.post('/patient/info', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const cid = req.body.cid;
@@ -175,8 +175,30 @@ const router = (fastify, { }, next) => {
     }
   });
 
+  fastify.post('/trigger', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const url = req.body.url;
+    const hn = req.body.hn;
+    const cid = req.body.cid;
+    const type = req.body.type;
+    const localCode = req.body.localCode;
+    const servicePointId = req.body.servicePointId;
+
+    try {
+      if (type == 'GET') {
+        await kioskModel.triggerGet(url, hn, cid, localCode, servicePointId);
+      }
+      if (type == 'POST') {
+        await kioskModel.triggerPOST(url, hn, cid, localCode, servicePointId);
+      }
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK });
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+    }
+  });
+
   next();
 
-}
+};
 
 module.exports = router;

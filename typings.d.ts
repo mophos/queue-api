@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import { Logger } from 'pino';
-import * as knex from 'knex'
+import * as knex from 'knex';
 
 declare module 'fastify' {
   interface FastifyRequest<HttpRequest> {
