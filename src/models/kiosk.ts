@@ -63,14 +63,15 @@ export class KioskModel {
         },
         headers:
         {
-          'content-type': 'text/json'
+          'Content-Type': 'application/json'
         },
         body: {
           hn: hn,
           cid: cid,
           localCode: localCode,
           servicePointId: servicePointId
-        }
+        },
+        json: true
       };
 
       request(options, function (error, response, body) {

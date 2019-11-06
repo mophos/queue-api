@@ -92,11 +92,11 @@ const router = (fastify, { }, next) => {
         const decoded = fastify.jwt.verify(token);
         console.log('remove');
 
-        const topic = `kiosk/${kioskId}`
+        const topic = `kiosk/${kioskId}`;
 
         const payload = {
           ok: false
-        }
+        };
         fastify.mqttClient.publish(topic, JSON.stringify(payload), { qos: 0, retain: false });
         reply.status(HttpStatus.OK).send({ message: 'remove' });
 
@@ -135,8 +135,6 @@ const router = (fastify, { }, next) => {
             title: title,
             sex: sex
           };
-
-          console.log(patient);
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
 
