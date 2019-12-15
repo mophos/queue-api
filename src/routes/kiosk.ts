@@ -110,6 +110,7 @@ const router = (fastify, { }, next) => {
 
   });
   // ===============
+  
   fastify.post('/patient/info', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const cid = req.body.cid;
     var dbHIS: Knex = fastify.dbHIS;
@@ -128,6 +129,47 @@ const router = (fastify, { }, next) => {
           var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
           var patient = {
             hn: hn,
+            firstName: firstName,
+            lastName: lastName,
+            birthDate: thDate,
+            engBirthDate: moment(birthDate).format('YYYY-MM-DD'),
+            title: title,
+            sex: sex
+          };
+
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
+
+        } else {
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.NOT_FOUND, message: 'ไม่พบข้อมูล' });
+        }
+      } catch (error) {
+        fastify.log.error(error);
+        reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+      }
+    } else {
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' })
+    }
+
+  })
+
+  fastify.post('/patient/info/hn', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+    const hn = req.body.hn;
+    var dbHIS: Knex = fastify.dbHIS;
+    if (cid) {
+      try {
+        const rs: any = await hisModel.getPatientInfoWithHN(dbHIS, hn);
+        if (rs.length) {
+          var data = rs[0];
+          var cid = data.cid;
+          var firstName = data.first_name;
+          var lastName = data.last_name;
+          var birthDate = data.birthdate;
+          var title = data.title;
+          var sex = data.sex;
+
+          var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
+          var patient = {
+            cid: cid,
             firstName: firstName,
             lastName: lastName,
             birthDate: thDate,
