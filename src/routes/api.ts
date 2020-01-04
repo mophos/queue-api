@@ -643,8 +643,6 @@ const router = (fastify, { }, next) => {
     }
   });
 
-  next();
-
   fastify.get('/nhso', async (req: fastify.Request, reply: fastify.Reply) => {
     const token = req.query.token;
     if (token) {
@@ -666,6 +664,8 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบ TOKEN' });
     }
   });
+  
+  next();
+  
 };
-
 module.exports = router;
