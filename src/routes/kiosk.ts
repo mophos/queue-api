@@ -41,7 +41,7 @@ switch (hisType) {
 }
 
 const router = (fastify, { }, next) => {
-
+  const dbHIS: Knex = fastify.dbHIS;
   const db: Knex = fastify.db;
 
   // send from smartcard
@@ -110,34 +110,39 @@ const router = (fastify, { }, next) => {
 
   });
   // ===============
-  
+
   fastify.post('/patient/info', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const cid = req.body.cid;
-    var dbHIS: Knex = fastify.dbHIS;
     if (cid) {
       try {
         const rs: any = await hisModel.getPatientInfo(dbHIS, cid);
         if (rs.length) {
-          var data = rs[0];
-          var hn = data.hn;
-          var firstName = data.first_name;
-          var lastName = data.last_name;
-          var birthDate = data.birthdate;
-          var title = data.title;
-          var sex = data.sex;
+          const data = rs[0];
+          const visit = await hisModel.getCurrentVisit(dbHIS, data.hn);
+          let isVisit = false;
+          if (visit.length) {
+            isVisit = true;
+          }
+          const hn = data.hn;
+          const firstName = data.first_name;
+          const lastName = data.last_name;
+          const birthDate = data.birthdate;
+          const title = data.title;
+          const sex = data.sex;
 
-          var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
-          var patient = {
+          const thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
+          const patient = {
             hn: hn,
             firstName: firstName,
             lastName: lastName,
             birthDate: thDate,
             engBirthDate: moment(birthDate).format('YYYY-MM-DD'),
             title: title,
-            sex: sex
+            sex: sex,
+            isVisit: isVisit
           };
 
-          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient });
 
         } else {
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.NOT_FOUND, message: 'ไม่พบข้อมูล' });
@@ -147,35 +152,40 @@ const router = (fastify, { }, next) => {
         reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
       }
     } else {
-      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' })
+      reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' });
     }
 
-  })
+  });
 
   fastify.post('/patient/info/hn', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     const hn = req.body.hn;
-    var dbHIS: Knex = fastify.dbHIS;
-    if (cid) {
+    if (hn) {
       try {
         const rs: any = await hisModel.getPatientInfoWithHN(dbHIS, hn);
         if (rs.length) {
-          var data = rs[0];
-          var cid = data.cid;
-          var firstName = data.first_name;
-          var lastName = data.last_name;
-          var birthDate = data.birthdate;
-          var title = data.title;
-          var sex = data.sex;
+          const visit = await hisModel.getCurrentVisit(dbHIS, hn);
+          let isVisit = false;
+          if (visit.length) {
+            isVisit = true;
+          }
+          const data = rs[0];
+          const cid = data.cid;
+          const firstName = data.first_name;
+          const lastName = data.last_name;
+          const birthDate = data.birthdate;
+          const title = data.title;
+          const sex = data.sex;
 
-          var thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
-          var patient = {
+          const thDate = `${moment(birthDate).format('DD/MM')}/${moment(birthDate).get('year') + 543}`;
+          const patient = {
             cid: cid,
             firstName: firstName,
             lastName: lastName,
             birthDate: thDate,
             engBirthDate: moment(birthDate).format('YYYY-MM-DD'),
             title: title,
-            sex: sex
+            sex: sex,
+            isVisit: isVisit
           };
 
           reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: patient })
@@ -191,7 +201,7 @@ const router = (fastify, { }, next) => {
       reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.NOT_FOUND, message: 'CID not found!' })
     }
 
-  })
+  });
 
   fastify.post('/nhso', { preHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
     // const token = req.body.token;

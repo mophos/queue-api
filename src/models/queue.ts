@@ -945,4 +945,9 @@ export class QueueModel {
     return sql;
 
   }
+
+  getTokenNHSO(db: knex) {
+    return db('q4u_nhso')
+      .limit(1);
+  }
 }

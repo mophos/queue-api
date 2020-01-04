@@ -20,6 +20,10 @@ export class HomcModel {
         return data;
     }
 
+    getCurrentVisit(db: knex, hn) {
+        return [];
+      }
+      
     async getVisitTotal(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any) {
         let data= await db.raw(`select count(*) as total from OPD_H as o 
         inner join PATIENT as p on p.hn = o.hn 
