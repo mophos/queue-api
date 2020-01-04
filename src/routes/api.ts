@@ -644,6 +644,28 @@ const router = (fastify, { }, next) => {
   });
 
   next();
-}
+
+  fastify.get('/nhso', async (req: fastify.Request, reply: fastify.Reply) => {
+    const token = req.query.token;
+    if (token) {
+      // check token
+      const rsToken: any = await tokenModel.find(db, token);
+      if (rsToken.length) {
+        try {
+          const rs = await queueModel.getTokenNHSO(db);
+          reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, rows: rs[0] });
+        } catch (error) {
+          fastify.log.error(error);
+          reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message })
+        }
+      } else {
+        reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) })
+      }
+
+    } else {
+      reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'ไม่พบ TOKEN' });
+    }
+  });
+};
 
 module.exports = router;

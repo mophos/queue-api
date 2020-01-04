@@ -18,6 +18,10 @@ export class UniversalModel {
       .where('hn', hn).limit(1);
   }
 
+  getCurrentVisit(db: knex, hn) {
+    return [];
+  }
+
   getHISQueue(db: knex, hn: any, dateServ: any) {
     return db('q4u')
       .select('his_queue as queue')

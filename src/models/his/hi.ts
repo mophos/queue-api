@@ -12,6 +12,10 @@ export class HiModel {
       .where('pop_id', cid).limit(1);
   }
 
+  getCurrentVisit(db: knex, hn) {
+    return [];
+  }
+  
   getPatientInfoWithHN(db: knex, hn: any) {
     return db('pt')
       .select('hn', 'fname as first_name', 'pname as title', 'male as sex', 'lname as last_name', 'brthdate as birthdate')

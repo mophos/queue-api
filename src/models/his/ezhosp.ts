@@ -13,6 +13,10 @@ export class EzhospModel {
       .where('hn', hn).limit(1);
   }
 
+  getCurrentVisit(db: knex, hn) {
+    return [];
+  }
+  
   getVisitList(db: knex, dateServ: any, localCode: any[], vn: any[], servicePointCode: any, query: any, limit: number = 20, offset: number = 0) {
     var sql = db('view_opd_visit as o')
       .select('o.vn', 'o.hn', db.raw('o.date as date_serv'), db.raw('o.time as time_serv'),

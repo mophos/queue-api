@@ -18,6 +18,17 @@ export class HosxpModel {
       .where('hn', hn).limit(1);
   }
 
+getCurrentVisit(db: knex, hn) {
+    return db('vn_stat as v')
+      .select('v.vstdate', 'o.vsttime', 'v.hn', 'p.pname as title', 'p.fname as first_name', 'p.lname as last_name')
+      .leftJoin('ovst as o', 'o.vn', 'v.vn')
+      .leftJoin('spclty as s', 's.spclty', 'v.spclty')
+      .leftJoin('kskdepartment as k', 'k.depcode', 'o.cur_dep')
+      .leftJoin('patient as p', 'p.hn', 'v.hn')
+      .whereRaw('v.vstdate = CURDATE()')
+      .where('v.hn', hn);
+  }
+  
   getHISQueue(db: knex, hn: any, dateServ: any) {
     return db('ovst')
       .select('oqueue as queue')
