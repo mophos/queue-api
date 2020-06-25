@@ -15,10 +15,10 @@ export class HiModel {
   getCurrentVisit(db: knex, hn) {
     return [];
   }
-  
+
   getPatientInfoWithHN(db: knex, hn: any) {
     return db('pt')
-      .select('hn', 'fname as first_name', 'pname as title', 'male as sex', 'lname as last_name', 'brthdate as birthdate')
+      .select('hn', 'fname as first_name', 'pname as title', 'male as sex', 'lname as last_name', 'brthdate as birthdate', 'cid')
       .where('hn', hn).limit(1);
   }
 

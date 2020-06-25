@@ -14,7 +14,7 @@ export class UniversalModel {
 
   getPatientInfoWithHN(db: knex, hn: any) {
     return db('q4u_patient')
-      .select('hn', 'first_name', 'title', 'sex', 'last_name', 'birthdate')
+      .select('hn', 'first_name', 'title', 'sex', 'last_name', 'birthdate', 'cid')
       .where('hn', hn).limit(1);
   }
 
