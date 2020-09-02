@@ -861,7 +861,9 @@ export class QueueModel {
   getVisitHistoryList(db: knex, dateServe: any, servicePointId, query, limit, offset) {
     const _query = `%${query}%`;
     const sql = db('q4u_queue as q')
+      .select('q.*', 'p.*', 's.local_code')
       .join('q4u_person as p', 'p.hn', 'q.hn')
+      .join('q4u_service_points as s', 's.service_point_id', 'q.service_point_id')
       .where('q.date_serv', dateServe);
 
     if (servicePointId) {
