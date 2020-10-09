@@ -369,6 +369,33 @@ export class QueueModel {
     return sql;
   }
 
+  serachQueue(db: knex, dateServ: any, query = '') {
+    const _query = `%${query}%`;
+    const maxId = db('q4u_queue as q')
+      .max('q.queue_id as queue_id')
+      .where((w) => {
+        w.orWhere('q.queue_number', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      })
+      .where('q.date_serv', dateServ)
+      .groupBy('q.queue_number')
+
+    const sql = db('q4u_queue as q')
+      .select('q.queue_id', 'q.queue_interview', 'q.hn', 'q.vn', 'q.service_point_id', 'q.priority_id', 'q.queue_number',
+        'q.room_id', 'q.date_serv', 'q.time_serv', 'p.title', 'p.first_name',
+        'p.last_name', 'p.birthdate', 'pr.priority_name', 'q.is_interview', 'q.is_completed')
+      .innerJoin('q4u_person as p', 'p.hn', 'q.hn')
+      .innerJoin('q4u_priorities as pr', 'pr.priority_id', 'q.priority_id')
+      .where('q.date_serv', dateServ)
+      .whereIn('q.queue_id', maxId)
+      .where((w) => {
+        w.orWhere('q.queue_number', 'like', _query)
+          .orWhereRaw(`REPLACE(q.queue_number,' ','') like '${_query}'`);
+      }).limit(1)
+      .groupBy('q.queue_id');
+    return sql;
+  }
+
   getWaitingListTotal(db: knex, dateServ: any, servicePointId: any, query = '') {
     const _query = `%${query}%`;
     return db('q4u_queue as q')
